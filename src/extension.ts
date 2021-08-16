@@ -1,53 +1,69 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
-import {newSession} from './commands/new-session';
+import {commands, workspace, Disposable, ExtensionContext, tasks} from 'vscode';
+import {startLocalServer} from './commands/start-local-server';
+import {getConfig} from './config';
+import {LocalServerService} from './local-server-service';
+import {LoggerService} from './logger-service';
+import {ResolverService} from './resolver-service';
 import {AppiumTaskProvider} from './task';
+import {getCurrentWorkspaceFolderUri} from './workspace';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
+let disposables: Disposable[] = [];
+let log: LoggerService;
 
-let appiumTaskProvider: vscode.Disposable | undefined;
-
-export function activate(ctx: vscode.ExtensionContext) {
+export function activate(ctx: ExtensionContext) {
   // I'm not sure if this is neccessary, but it's here just in case
-  if (
-    !vscode.workspace.workspaceFolders ||
-    !vscode.workspace.workspaceFolders.length
-  ) {
+  if (!workspace.workspaceFolders || !workspace.workspaceFolders.length) {
     return;
   }
 
-  appiumTaskProvider = vscode.tasks.registerTaskProvider(
-    AppiumTaskProvider.taskType,
-    new AppiumTaskProvider(),
-  );
+  const config = getConfig(getCurrentWorkspaceFolderUri());
+  log = new LoggerService();
+  const resolver = new ResolverService(log);
+  const localServer = new LocalServerService(log);
 
-  ctx.subscriptions.push(appiumTaskProvider);
+  log.info('Starting Appium extension');
 
+  disposables = [
+    tasks.registerTaskProvider(
+      AppiumTaskProvider.taskType,
+      new AppiumTaskProvider(log, resolver),
+    ),
+    commands.registerCommand('appium.startLocalServer', () => {
+      startLocalServer(log, resolver, localServer);
+    }),
+    commands.registerCommand('appium.showOutput', () => {
+      log.show();
+    }),
+    commands.registerCommand('appium.createStartServerTask', () => {}),
+    localServer,
+    log,
+  ];
+
+  ctx.subscriptions.push(...disposables);
   // newSession(ctx);
 
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with  registerCommand
-  // The commandId parameter must match the command field in package.json
-  let disposable = vscode.commands.registerCommand(
-    'vscode-appium.helloWorld',
-    function () {
-      // The code you place here will be executed every time your command is executed
+  // // The command has been defined in the package.json file
+  // // Now provide the implementation of the command with  registerCommand
+  // // The commandId parameter must match the command field in package.json
+  // let disposable = vscode.commands.registerCommand(
+  //   'vscode-appium.helloWorld',
+  //   function () {
+  //     // The code you place here will be executed every time your command is executed
 
-      // Display a message box to the user
-      vscode.window.showInformationMessage(
-        'Hello World from Appium for VS Code!',
-      );
-    },
-  );
+  //     // Display a message box to the user
+  //     vscode.window.showInformationMessage(
+  //       'Hello World from Appium for VS Code!',
+  //     );
+  //   },
+  // );
 
-  ctx.subscriptions.push(disposable);
+  // ctx.subscriptions.push(disposable);
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-  if (appiumTaskProvider) {
-    appiumTaskProvider.dispose();
+  log.info('Disposing Appium extension');
+  for (let disposable of disposables) {
+    disposable.dispose();
   }
 }
