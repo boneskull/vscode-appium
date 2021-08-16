@@ -18,70 +18,222 @@
   "contributes": {
     "commands": [
       {
-        "command": "vscode-appium.helloWorld",
-        "title": "Hello World"
+        "command": "appium.showOutput",
+        "title": "Appium: Show Extension Output"
       },
       {
-        "command": "vscode-appium.newSession",
-        "title": "Appium: New Session..."
+        "command": "appium.startLocalServer",
+        "title": "Appium: Start Local Server"
+      },
+      {
+        "command": "appium.createStartServerTask",
+        "title": "Appium: Create \"Start Server\" Task"
       }
     ],
     "configuration": {
       "title": "Appium",
       "properties": {
-        "vscode-appium.sessionHost": {
-          "type": "string",
-          "description": "Appium server host",
-          "default": "127.0.0.1",
-          "format": "ipv4",
-          "required": true
+        "appium.defaults.logFilters": {
+          "type": "array",
+          "description": "One or more log filtering rules",
+          "items": {
+            "type": "string"
+          }
         },
-        "vscode-appium.sessionPort": {
+        "appium.defaults.server.drivers": {
+          "type": "array",
+          "default": "",
+          "description": "A list of drivers to activate. By default, all installed drivers will be activated.  If a string, must be valid JSON",
+          "items": {
+            "type": "string"
+          }
+        },
+        "appium.defaults.server.plugins": {
+          "type": "array",
+          "default": "",
+          "items": {
+            "type": "string"
+          },
+          "markdownDescription": "A list of plugins to activate."
+        },
+        "appium.defaults.server.allowCors": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the Appium server should allow web browser connections from any host"
+        },
+        "appium.defaults.server.address": {
+          "type": "string",
+          "default": "0.0.0.0",
+          "description": "IP address to listen on",
+          "format": "hostname"
+        },
+        "appium.defaults.server.port": {
           "type": "integer",
-          "description": "Appium server port",
           "default": 4723,
-          "minimum": "1",
-          "maximum": "65535",
-          "required": true
+          "description": "Port to listen on",
+          "minimum": 1,
+          "maximum": 65535
         },
-        "vscode-appium.sessionPathname": {
+        "appium.defaults.server.basePath": {
           "type": "string",
-          "description": "Appium server pathname"
+          "default": "/",
+          "description": "Base path to use as the prefix for all webdriver routes running on the server"
         },
-        "vscode-appium.enableSSL": {
+        "appium.defaults.server.keepAliveTimeout": {
+          "type": "integer",
+          "default": 600,
+          "description": "Number of seconds the Appium server should apply as both the keep-alive timeout and the connection timeout for all requests. A value of 0 disables the timeout.",
+          "minimum": 0
+        },
+        "appium.defaults.server.callbackAddress": {
+          "type": "string",
+          "markdownDescription": "Callback IP address (default: same as `#appium.defaults.server.address#`)"
+        },
+        "appium.defaults.server.callbackPort": {
+          "type": "integer",
+          "default": 4723,
+          "minimum": 1,
+          "maximum": 65535,
+          "markdownDescription": "Callback port (default: same as `#appium.defaults.server.port#`)"
+        },
+        "appium.defaults.server.sessionOverride": {
           "type": "boolean",
-          "description": "Enable SSL",
-          "default": false
+          "default": false,
+          "description": "Enables session override (clobbering)"
         },
-        "vscode-appium.allowUnauthorizedCertificates": {
-          "type": "boolean",
-          "description": "Allow unauthorised certificates",
-          "default": false
-        },
-        "vscode-appium.proxyURL": {
+        "appium.defaults.server.logFile": {
           "type": "string",
-          "description": "Proxy URL"
+          "description": "Also send log output to this file"
         },
-        "vscode-appium.appiumVersion": {
+        "appium.defaults.server.loglevel": {
           "type": "string",
+          "default": "debug",
+          "description": "Log level (console[:file])",
           "enum": [
-            "1.x",
-            "2.x"
-          ],
-          "description": "Appium server version",
-          "default": "2.x"
+            "info",
+            "info:debug",
+            "info:info",
+            "info:warn",
+            "info:error",
+            "warn",
+            "warn:debug",
+            "warn:info",
+            "warn:warn",
+            "warn:error",
+            "error",
+            "error:debug",
+            "error:info",
+            "error:warn",
+            "error:error",
+            "debug",
+            "debug:debug",
+            "debug:info",
+            "debug:warn",
+            "debug:error"
+          ]
         },
-        "vscode-appium.plainTextUsername": {
-          "type": "string",
-          "description": "Appium server plain-text username"
+        "appium.defaults.server.logTimestamp": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show timestamps in console output"
         },
-        "vscode-appium.plainTextPassword": {
-          "type": "string",
-          "description": "Appium server plain-text password"
+        "appium.defaults.server.localTimezone": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use local timezone for timestamps"
         },
-        "vscode-appium.queryString": {
+        "appium.defaults.server.logNoColors": {
+          "type": "boolean",
+          "default": false,
+          "description": "Do not use color in console output"
+        },
+        "appium.defaults.server.webhook": {
           "type": "string",
-          "description": "Appium server URL query string (search params)"
+          "description": "Also send log output to this http listener",
+          "format": "uri"
+        },
+        "appium.defaults.server.nodeconfig": {
+          "type": "object",
+          "default": "",
+          "description": "Path to configuration JSON file to register Appium as a node with Selenium Grid 3; otherwise the configuration itself"
+        },
+        "appium.defaults.server.noPermsCheck": {
+          "type": "boolean",
+          "default": false,
+          "description": "Do not check that needed files are readable and/or writable"
+        },
+        "appium.defaults.server.strictCaps": {
+          "type": "boolean",
+          "default": false,
+          "description": "Cause sessions to fail if desired caps are sent in that Appium does not recognize as valid for the selected device"
+        },
+        "appium.defaults.server.tmp": {
+          "type": "string",
+          "markdownDescription": "Absolute path to directory Appium can use to manage temp files. Defaults to `C:\\Windows\\Temp` on Windows and `/tmp` otherwise."
+        },
+        "appium.defaults.server.traceDir": {
+          "type": "string",
+          "description": "Absolute path to directory Appium can use to save iOS instrument traces; defaults to <tmp>/appium-instruments"
+        },
+        "appium.defaults.server.debugLogSpacing": {
+          "type": "boolean",
+          "default": false,
+          "description": "Add exaggerated spacing in logs to help with visual inspection"
+        },
+        "appium.defaults.server.longStacktrace": {
+          "type": "boolean",
+          "default": false,
+          "description": "Add long stack traces to log entries. Recommended for debugging only."
+        },
+        "appium.defaults.server.defaultCapabilities": {
+          "type": "object",
+          "description": "Set the default desired capabilities, which will be set on each session unless overridden by received capabilities. If a string, a path to a JSON file containing the capabilities, or raw JSON."
+        },
+        "appium.defaults.server.relaxedSecurity": {
+          "type": "boolean",
+          "default": false,
+          "description": "Disable additional security checks, so it is possible to use some advanced features, provided by drivers supporting this option. Only enable it if all the clients are in the trusted network and it's not the case if a client could potentially break out of the session sandbox. Specific features can be overridden by using \"deny-insecure\""
+        },
+        "appium.defaults.server.allowInsecure": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "markdownDescription": "Set which insecure features are allowed to run in this server's sessions. Features are defined on a driver level; see driver documentation for more details. Note that features defined via `#appium.defaults.server.deny-insecure#` will be disabled, even if also listed here."
+        },
+        "appium.defaults.server.denyInsecure": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "markdownDescription": "Set which insecure features are not allowed to run in this server's sessions. Features are defined on a driver level; see driver documentation for more details. Features listed here will not be enabled even if also listed in `#appium.defaults.server.allow-insecure#`, and even if `#appium.defaults.server.relaxed-security#` is enabled."
+        },
+        "appium.defaults.driver": {
+          "type": "object",
+          "description": "Driver-specific configuration. Keys should correspond to driver package names"
+        },
+        "appium.defaults.plugin": {
+          "type": "object",
+          "description": "Plugin-specific configuration. Keys should correspond to plugin package names"
+        },
+        "appium.defaults.configFile": {
+          "markdownDescription": "Explicit path to Appium config file",
+          "type": "string"
+        },
+        "appium.defaults.server.useAllPlugins": {
+          "markdownDescription": "Enable all installed plugins.  Overrides `#appium.defaults.server.plugins#`.",
+          "type": "boolean"
+        },
+        "appium.appiumHome": {
+          "markdownDescription": "Path to `APPIUM_HOME` directory",
+          "type": "string"
+        },
+        "appium.useBundledAppium": {
+          "markdownDescription": "Use bundled Appium. If `false`, look for a locally installed Appium or a globally installed Appium",
+          "type": "boolean",
+          "default": true
         }
       }
     },
@@ -124,31 +276,48 @@
     ]
   },
   "activationEvents": [
-    "onCommand:vscode-appium.helloWorld"
+    "workspaceContains:**/node_modules/appium",
+    "onCommand:appium.showOutput",
+    "onCommand:appium.startLocalServer",
+    "onCommand:appium.createStartServerTask"
   ],
   "dependencies": {
+    "appium": "file:../appium/packages/appium",
+    "chalk": "^4.1.1",
+    "execa": "^5.1.1",
     "global-dirs": "^3.0.0",
     "isexe": "^2.0.0",
+    "key-convert": "^0.0.1",
+    "read-pkg-up": "^7.0.1",
+    "resolve-from": "^5.0.0",
     "resolve-global": "^1.0.0",
-    "semver": "^7.3.5"
+    "semver": "^7.3.5",
+    "which": "^2.0.2"
   },
   "devDependencies": {
-    "@types/glob": "^7.1.3",
+    "@types/glob": "^7.1.4",
     "@types/isexe": "^2.0.1",
-    "@types/mocha": "^8.2.2",
-    "@types/node": "14.x",
-    "@types/semver": "^7.3.7",
-    "@types/vscode": "^1.57.0",
-    "@typescript-eslint/eslint-plugin": "^4.26.0",
-    "@typescript-eslint/parser": "^4.26.0",
-    "eslint": "^7.27.0",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.6.1",
+    "@types/semver": "^7.3.8",
+    "@types/vscode": "^1.59.0",
+    "@types/which": "^2.0.1",
+    "@typescript-eslint/eslint-plugin": "^4.29.1",
+    "@typescript-eslint/parser": "^4.29.1",
+    "ajv": "^8.6.2",
+    "camelcase": "^6.2.0",
+    "eslint": "^7.32.0",
     "glob": "^7.1.7",
-    "mocha": "^8.4.0",
+    "mocha": "^9.0.3",
     "prettier": "^2.3.2",
+    "read-pkg": "^6.0.0",
     "typescript": "^4.3.2",
-    "vscode-test": "^1.5.2"
+    "vscode-test": "^1.6.1",
+    "write-pkg": "^4.0.0"
   },
   "engines": {
     "vscode": "^1.57.0"
-  }
+  },
+  "readme": "ERROR: No README data found!",
+  "_id": "vscode-appium@0.0.1"
 }
