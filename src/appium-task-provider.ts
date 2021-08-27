@@ -9,7 +9,7 @@ import {
   WorkspaceFolder,
 } from 'vscode';
 import { AppiumPseudoterminal } from './appium-pty';
-import { getConfig } from './config';
+import { ConfigService } from './config-service';
 import { APPIUM_SERVER_TASK_TYPE } from './constants';
 import { LoggerService } from './logger-service';
 import { ResolverService } from './resolver-service';
@@ -32,24 +32,26 @@ export class AppiumTaskProvider implements TaskProvider, Disposable {
    */
   private static readonly source = 'appium';
 
-  constructor(private log: LoggerService, private resolver: ResolverService) {}
+  constructor(
+    private log: LoggerService,
+    private resolver: ResolverService,
+    private config: ConfigService
+  ) {}
 
   async provideTasks(token: CancellationToken): Promise<Task[]> {
     if (token.isCancellationRequested) {
       return [];
     }
 
-    const config = getConfig('serverDefaults');
-
     const defaultConfigValues = {
-      address: config.address,
-      port: config.port,
-      useBundledAppium: config.useBundledAppium,
+      address: this.config.get('serverDefaults.address'),
+      port: this.config.get('serverDefaults.port'),
+      useBundledAppium: this.config.get('serverDefaults.useBundledAppium'),
     };
 
     const executable = await this.resolver.resolve({
-      executablePath: config.executablePath,
-      useBundledAppium: config.useBundledAppium,
+      executablePath: this.config.get('serverDefaults.executablePath'),
+      useBundledAppium: this.config.get('serverDefaults.useBundledAppium'),
     });
 
     const definition = {
@@ -59,7 +61,10 @@ export class AppiumTaskProvider implements TaskProvider, Disposable {
     };
 
     return [
-      this.createTask(definition, executable, { ...config, ...definition }),
+      this.createTask(definition, executable, {
+        ...this.config.get('serverDefaults'),
+        ...definition,
+      }),
     ];
   }
 
@@ -99,14 +104,12 @@ export class AppiumTaskProvider implements TaskProvider, Disposable {
       useBundledAppium: definition.useBundledAppium,
     });
 
-    const config = getConfig('serverDefaults');
-
     this.log.debug('Creating task with executable: %j', executable);
 
     return this.createTask(
       definition,
       executable,
-      { ...config, ...definition },
+      { ...this.config.get('serverDefaults'), ...definition },
       task.scope
     );
   }

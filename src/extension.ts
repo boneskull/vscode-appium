@@ -11,6 +11,7 @@ import { LoggerService } from './logger-service';
 import { ResolverService } from './resolver-service';
 import { attachToSession } from './commands/session-attach';
 import { AppiumTaskProvider } from './appium-task-provider';
+import { ConfigService } from './config-service';
 
 let disposables: Disposable[] = [];
 let log: LoggerService;
@@ -24,22 +25,23 @@ export function activate(ctx: ExtensionContext) {
   log = new LoggerService();
   const resolver = new ResolverService(log);
   const localServer = new LocalServerService(log);
+  const config = new ConfigService(log);
 
   log.info('Starting Appium extension');
 
   disposables = [
     tasks.registerTaskProvider(
       AppiumTaskProvider.taskType,
-      new AppiumTaskProvider(log, resolver)
+      new AppiumTaskProvider(log, resolver, config)
     ),
     commands.registerCommand('appium.startLocalServer', () => {
-      startLocalServer(log, resolver, localServer);
+      startLocalServer(log, resolver, localServer, config);
     }),
     commands.registerCommand('appium.showOutput', () => {
       log.show();
     }),
     commands.registerCommand('appium.attachToSession', () => {
-      attachToSession(log);
+      attachToSession(log, config);
     }),
     localServer,
     log,

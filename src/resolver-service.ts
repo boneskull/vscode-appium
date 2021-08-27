@@ -1,7 +1,5 @@
-import { Uri, window, workspace } from 'vscode';
+import { window, workspace } from 'vscode';
 import resolveFrom from 'resolve-from';
-import { getConfig, getConfigWithScope } from './config';
-import { getCurrentWorkspaceFolderUri } from './workspace';
 import readPkgUp from 'read-pkg-up';
 import path from 'path';
 import which from 'which';

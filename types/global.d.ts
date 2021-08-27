@@ -81,9 +81,9 @@ declare global {
 
   // recursively loop through nested properties and build dot-notation types
   type PathImpl<T, K extends keyof T> = K extends string
-    ? T[K] extends Record<string, unknown>
-      ? T[K] extends ArrayLike<unknown>
-        ? K | `${K}.${PathImpl<T[K], Exclude<keyof T[K], keyof unknown[]>>}`
+    ? T[K] extends Record<string, any>
+      ? T[K] extends ArrayLike<any>
+        ? K | `${K}.${PathImpl<T[K], Exclude<keyof T[K], keyof any[]>>}`
         : K | `${K}.${PathImpl<T[K], keyof T[K]>}`
       : K
     : never;
