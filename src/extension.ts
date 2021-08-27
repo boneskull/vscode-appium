@@ -1,11 +1,16 @@
-import {commands, workspace, Disposable, ExtensionContext, tasks} from 'vscode';
-import {startLocalServer} from './commands/start-local-server';
-import {getConfig} from './config';
-import {LocalServerService} from './local-server-service';
-import {LoggerService} from './logger-service';
-import {ResolverService} from './resolver-service';
-import {AppiumTaskProvider} from './task';
-import {getCurrentWorkspaceFolderUri} from './workspace';
+import {
+  commands,
+  workspace,
+  Disposable,
+  ExtensionContext,
+  tasks,
+} from 'vscode';
+import { startLocalServer } from './commands/start-local-server';
+import { LocalServerService } from './local-server-service';
+import { LoggerService } from './logger-service';
+import { ResolverService } from './resolver-service';
+import { attachToSession } from './commands/session-attach';
+import { AppiumTaskProvider } from './appium-task-provider';
 
 let disposables: Disposable[] = [];
 let log: LoggerService;
@@ -16,7 +21,6 @@ export function activate(ctx: ExtensionContext) {
     return;
   }
 
-  const config = getConfig(getCurrentWorkspaceFolderUri());
   log = new LoggerService();
   const resolver = new ResolverService(log);
   const localServer = new LocalServerService(log);
@@ -26,7 +30,7 @@ export function activate(ctx: ExtensionContext) {
   disposables = [
     tasks.registerTaskProvider(
       AppiumTaskProvider.taskType,
-      new AppiumTaskProvider(log, resolver),
+      new AppiumTaskProvider(log, resolver)
     ),
     commands.registerCommand('appium.startLocalServer', () => {
       startLocalServer(log, resolver, localServer);
@@ -34,30 +38,14 @@ export function activate(ctx: ExtensionContext) {
     commands.registerCommand('appium.showOutput', () => {
       log.show();
     }),
-    commands.registerCommand('appium.createStartServerTask', () => {}),
+    commands.registerCommand('appium.attachToSession', () => {
+      attachToSession(log);
+    }),
     localServer,
     log,
   ];
 
   ctx.subscriptions.push(...disposables);
-  // newSession(ctx);
-
-  // // The command has been defined in the package.json file
-  // // Now provide the implementation of the command with  registerCommand
-  // // The commandId parameter must match the command field in package.json
-  // let disposable = vscode.commands.registerCommand(
-  //   'vscode-appium.helloWorld',
-  //   function () {
-  //     // The code you place here will be executed every time your command is executed
-
-  //     // Display a message box to the user
-  //     vscode.window.showInformationMessage(
-  //       'Hello World from Appium for VS Code!',
-  //     );
-  //   },
-  // );
-
-  // ctx.subscriptions.push(disposable);
 }
 
 // this method is called when your extension is deactivated
@@ -66,4 +54,5 @@ export function deactivate() {
   for (let disposable of disposables) {
     disposable.dispose();
   }
+  log.dispose();
 }

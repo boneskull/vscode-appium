@@ -1,6 +1,7 @@
-import { ResolverService } from "../resolver-service";
-import { LoggerService } from "../logger-service";
-import { LocalServerService } from "../local-server-service";
+import { ResolverService } from '../resolver-service';
+import { LoggerService } from '../logger-service';
+import { LocalServerService } from '../local-server-service';
+import { getConfig } from '../config';
 
 export async function startLocalServer(
   log: LoggerService,
@@ -8,5 +9,8 @@ export async function startLocalServer(
   localServer: LocalServerService
 ) {
   const executable = await resolver.resolve();
-  await localServer.start(executable);
+  const server = await localServer.start(
+    executable,
+    getConfig('serverDefaults')
+  );
 }

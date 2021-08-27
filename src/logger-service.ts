@@ -1,6 +1,6 @@
-import {Disposable, window} from 'vscode';
-import {format as printf} from 'util';
-import {OUTPUT_CHANNEL_NAME} from './constants';
+import { Disposable, window } from 'vscode';
+import { format as printf } from 'util';
+import { OUTPUT_CHANNEL_NAME } from './constants';
 
 /**
  * Log levels
@@ -24,18 +24,8 @@ const HR_LOGLEVEL: LogLevelString[] = [
 ];
 
 export class LoggerService implements Disposable {
-  private outputChannel = window.createOutputChannel(OUTPUT_CHANNEL_NAME);
-
   private _logLevel: LogLevel = LogLevel.DEBUG;
-
-  public get logLevel() {
-    return this._logLevel;
-  }
-
-  public set logLevel(value: LogLevel) {
-    this._logLevel = value;
-  }
-
+  private outputChannel = window.createOutputChannel(OUTPUT_CHANNEL_NAME);
   /**
    * Instantiate with a log level, if desired
    */
@@ -45,6 +35,14 @@ export class LoggerService implements Disposable {
     } else if (typeof logLevel === 'number') {
       this.logLevel = logLevel;
     }
+  }
+
+  public get logLevel() {
+    return this._logLevel;
+  }
+
+  public set logLevel(value: LogLevel) {
+    this._logLevel = value;
   }
 
   /**
@@ -57,28 +55,10 @@ export class LoggerService implements Disposable {
   }
 
   /**
-   * Util function to format printf-style
+   * Disposes the output channel
    */
-  public format(...args: any[]) {
-    return printf(...args);
-  }
-
-  /**
-   * Append messages to the output channel and format it with a title
-   */
-  public info(...args: any[]): void {
-    if (this.logLevel <= LogLevel.INFO) {
-      this.writeLog(LogLevel.INFO, ...args);
-    }
-  }
-
-  /**
-   * Append messages to the output channel and format it with a title
-   */
-  public warn(...args: any[]): void {
-    if (this.logLevel <= LogLevel.WARN) {
-      this.writeLog(LogLevel.WARN, ...args);
-    }
+  public dispose() {
+    this.outputChannel.dispose();
   }
 
   /**
@@ -105,11 +85,40 @@ export class LoggerService implements Disposable {
   }
 
   /**
+   * Util function to format printf-style
+   */
+  public format(...args: any[]) {
+    return printf(...args);
+  }
+
+  /**
+   * Append messages to the output channel and format it with a title
+   */
+  public info(...args: any[]): void {
+    if (this.logLevel <= LogLevel.INFO) {
+      this.writeLog(LogLevel.INFO, ...args);
+    }
+  }
+
+  /**
    * Shows the output channel
    */
   public show() {
     this.outputChannel.show();
   }
+
+  /**
+   * Append messages to the output channel and format it with a title
+   */
+  public warn(...args: any[]): void {
+    if (this.logLevel <= LogLevel.WARN) {
+      this.writeLog(LogLevel.WARN, ...args);
+    }
+  }
+
+  // #endregion Public Methods (7)
+
+  // #region Private Methods (3)
 
   /**
    * Object dumper; only visible at DEBUG level.
@@ -118,6 +127,13 @@ export class LoggerService implements Disposable {
     if (this.logLevel <= LogLevel.DEBUG) {
       this.write(this.format('%O', data));
     }
+  }
+
+  /**
+   * Convenience to write directly to the output channel
+   */
+  private write(message: string) {
+    this.outputChannel.appendLine(message);
   }
 
   /**
@@ -132,22 +148,10 @@ export class LoggerService implements Disposable {
         '%s [%s] %s',
         HR_LOGLEVEL[logLevel],
         new Date().toLocaleTimeString(),
-        this.format(...args),
-      ),
+        this.format(...args)
+      )
     );
   }
 
-  /**
-   * Convenience to write directly to the output channel
-   */
-  private write(message: string) {
-    this.outputChannel.appendLine(message);
-  }
-
-  /**
-   * Disposes the output channel
-   */
-  public dispose() {
-    this.outputChannel.dispose();
-  }
+  // #endregion Private Methods (3)
 }

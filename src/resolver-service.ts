@@ -1,16 +1,16 @@
-import { window, workspace } from "vscode";
-import resolveFrom from "resolve-from";
-import { getConfig } from "./config";
-import { getCurrentWorkspaceFolderUri } from "./workspace";
-import readPkgUp from "read-pkg-up";
-import path from "path";
-import which from "which";
-import execa from "execa";
-import { LoggerService } from "./logger-service";
+import { Uri, window, workspace } from 'vscode';
+import resolveFrom from 'resolve-from';
+import { getConfig, getConfigWithScope } from './config';
+import { getCurrentWorkspaceFolderUri } from './workspace';
+import readPkgUp from 'read-pkg-up';
+import path from 'path';
+import which from 'which';
+import execa from 'execa';
+import { LoggerService } from './logger-service';
 import {
   BUNDLED_APPIUM_EXECUTABLE_PATH,
   BUNDLED_APPIUM_VERSION,
-} from "./constants";
+} from './constants';
 
 /**
  * Options for {@link ResolverService}.
@@ -22,8 +22,6 @@ export interface ResolverServiceOptions {
   bundled: boolean;
 }
 
-let bundledAppium: ResolverService;
-
 /**
  * A service for resolving the Appium executable.
  * If the workspace is untrusted, will return the singleton instance of
@@ -34,13 +32,12 @@ export class ResolverService {
    * If `true` use the bundled Appium.
    */
   private forceBundled: boolean = false;
-
   /**
    * Logger service.
    */
   private log: LoggerService;
 
-  constructor(log: LoggerService, opts: Partial<ResolverServiceOptions> = {}) {
+  constructor(log: LoggerService) {
     this.log = log;
     this.forceBundled = !workspace.isTrusted;
   }
@@ -51,14 +48,11 @@ export class ResolverService {
    * 2. Local to the workspaces
    * 3. Global (in `PATH` or `PATHEXT`)
    * 4. Bundled
-   * @param [workspaceFolderUri] - A workspace folder Uri. If unset, uses the current one
+   * @param [opts] - Options
    * @returns A {@link AppiumExecutable} with the executable path and version
    */
-  public async resolve(
-    workspaceFolderUri = getCurrentWorkspaceFolderUri()
-  ): Promise<AppiumExecutable> {
-    const config = getConfig(workspaceFolderUri);
-    const bundled = this.forceBundled || config.get("useBundledAppium");
+  public async resolve(opts: ResolveOptions = {}): Promise<AppiumExecutable> {
+    const bundled = this.forceBundled || opts.useBundledAppium;
 
     // force bundled
     if (bundled) {
@@ -69,14 +63,13 @@ export class ResolverService {
     }
 
     // search
-    const serverDefaults = config.get("defaults.server");
-    if (serverDefaults) {
+    if (opts) {
       // try to use the user config
-      this.log.debug("Retrieved server defaults: %O", serverDefaults);
-      if ((serverDefaults as AppiumUserServerDefaults).executablePath) {
+      this.log.debug('Retrieved server defaults: %O', opts);
+      if (opts.executablePath) {
         try {
           const { path, version } = await this.assertAppiumPath(
-            (serverDefaults as AppiumUserServerDefaults).executablePath
+            opts.executablePath
           );
 
           return { path, version };
@@ -84,7 +77,7 @@ export class ResolverService {
       }
     } else {
       this.log.debug(
-        "ResolverService: No Appium server defaults config found in current workspace"
+        'ResolverService: No Appium server defaults config found in current workspace'
       );
 
       // try local
@@ -95,7 +88,7 @@ export class ResolverService {
         if (result?.path) {
           const { path, version } = result;
           this.log.info(
-            "ResolverService: found local Appium v%s at %s",
+            'ResolverService: found local Appium v%s at %s',
             version,
             path
           );
@@ -108,7 +101,7 @@ export class ResolverService {
       if (result?.path) {
         const { path, version } = result;
         this.log.info(
-          "ResolverService: found global Appium v%s at %s",
+          'ResolverService: found global Appium v%s at %s',
           version,
           path
         );
@@ -119,11 +112,37 @@ export class ResolverService {
     const path = BUNDLED_APPIUM_EXECUTABLE_PATH;
     const version = BUNDLED_APPIUM_VERSION;
     this.log.info(
-      "ResolverService: falling back to bundled Appium v%s at %s",
+      'ResolverService: falling back to bundled Appium v%s at %s',
       version,
       path
     );
     return { path, version };
+  }
+
+  /**
+   * Asserts that the Appium executable is valid by retrieving its version.
+   * @param path - The path to the executable to validate
+   * @returns A {@link AppiumExecutable} with the executable path and version
+   */
+  protected async assertAppiumPath(path: string): Promise<AppiumExecutable> {
+    const { stdout: version } = await execa(path, ['--version']);
+    this.log.debug('ResolverService: found appium v%s at %s', version, path);
+    return { version, path };
+  }
+
+  /**
+   * Resolves Appium executable installed globally
+   * @returns A {@link AppiumExecutable} with the executable path and version
+   */
+  protected async resolveGlobal() {
+    try {
+      const executablePath = await which('appium');
+      this.log.debug(
+        'ResolverService: found global `appium` at %s',
+        executablePath
+      );
+      return this.assertAppiumPath(await which('appium'));
+    } catch {}
   }
 
   /**
@@ -137,7 +156,7 @@ export class ResolverService {
     // search for package.json containing appium
     while ((pkg = await readPkgUp({ normalize: false, cwd }))) {
       this.log.debug(
-        "ResolverService: searching in %s for `package.json` with an `appium` dependency",
+        'ResolverService: searching in %s for `package.json` with an `appium` dependency',
         cwd
       );
       if (
@@ -149,10 +168,10 @@ export class ResolverService {
           return this.assertAppiumPath(localAppiumPath);
         } catch {}
       }
-      cwd = path.normalize(path.join(cwd, ".."));
+      cwd = path.normalize(path.join(cwd, '..'));
     }
     this.log.debug(
-      "ResolverService: could not find a `package.json` with an `appium` dependency"
+      'ResolverService: could not find a `package.json` with an `appium` dependency'
     );
     // so if no package.json found, try to find appium in the same folder
     try {
@@ -162,37 +181,15 @@ export class ResolverService {
   }
 
   /**
-   * Resolves Appium executable installed globally
-   * @returns A {@link AppiumExecutable} with the executable path and version
-   */
-  protected async resolveGlobal() {
-    try {
-      const executablePath = await which("appium");
-      this.log.debug(
-        "ResolverService: found global `appium` at %s",
-        executablePath
-      );
-      return this.assertAppiumPath(await which("appium"));
-    } catch {}
-  }
-
-  /**
-   * Asserts that the Appium executable is valid by retrieving its version.
-   * @param path - The path to the executable to validate
-   * @returns A {@link AppiumExecutable} with the executable path and version
-   */
-  protected async assertAppiumPath(path: string): Promise<AppiumExecutable> {
-    const { stdout: version } = await execa(path, ["--version"]);
-    this.log.debug("ResolverService: found appium v%s at %s", version, path);
-    return { version, path };
-  }
-
-  /**
    * Look in closest `node_modules` for the `appium` executable
    * @param fromDir - The dir to start searching from
    * @returns The nominal path to the `appium` executable
    */
   private static resolveAppiumPathFrom(fromDir: string) {
-    return resolveFrom(fromDir, "appium");
+    return resolveFrom(fromDir, 'appium');
   }
 }
+
+type ResolveOptions = Partial<
+  Pick<AppiumServerConfig, 'executablePath' | 'useBundledAppium'>
+>;

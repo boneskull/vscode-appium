@@ -1,0 +1,49 @@
+{
+  "appium.serverDefaults.configFile": {
+    "markdownDescription": "Explicit path to Appium config file",
+    "type": "string"
+  },
+  "appium.serverDefaults.useAllPlugins": {
+    "markdownDescription": "Enable all installed plugins.  Overrides `#appium.serverDefaults.plugins#`.",
+    "type": "boolean"
+  },
+  "appium.serverDefaults.appiumHome": {
+    "markdownDescription": "Path to `APPIUM_HOME` directory",
+    "type": "string"
+  },
+  "appium.serverDefaults.useBundledAppium": {
+    "markdownDescription": "Use bundled Appium. If `false`, look for a locally installed Appium or a globally installed Appium",
+    "type": "boolean",
+    "default": true
+  },
+  "appium.serverDefaults.executablePath": {
+    "markdownDescription": "Explicit path to Appium executable. If left blank, the extension will search for one or fall back to the bundled Appium.  Overrides `#appium.serverDefaults.useBundledAppium#`",
+    "type": "string"
+  },
+  "appium.sessionDefaults.remoteAppiumVersion": {
+    "markdownDescription": "Version of Appium server. Ignored when using bundled Appium.",
+    "enum": ["1.x", "2.x"],
+    "type": "string",
+    "default": "1.x"
+  },
+  "appium.sessionDefaults.protocol": {
+    "markdownDescription": "Protocol to use when attaching to an Appium server",
+    "enum": ["http", "https"],
+    "type": "string",
+    "default": "http"
+  },
+  "appium.sessionDefaults.host": {
+    "markdownDescription": "Hostname of Appium server",
+    "type": "ipv4",
+    "default": "127.0.0.1"
+  },
+  "appium.sessionDefaults.port": {
+    "markdownDescription": "Port of Appium server",
+    "type": "number",
+    "default": 4723
+  },
+  "appium.sessionDefaults.pathname": {
+    "markdownDescription": "Override base pathname of Appium server; defaults to path depending on value of `#appium.sessionDefaults.remoteAppiumVersion#`",
+    "type": "string"
+  }
+}

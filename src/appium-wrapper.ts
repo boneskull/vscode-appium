@@ -15,12 +15,12 @@ type IPCProcess = NodeJS.Process & {
 type AppiumIPCCommandMessageListener = (message: AppiumIPCCommand) => any;
 
 function onMessage(listener: AppiumIPCCommandMessageListener) {
-  process.on("message", listener);
+  process.on('message', listener);
 }
 
 export async function main() {
   if (!process.connected) {
-    throw new Error("must be run as IPC process");
+    throw new Error('must be run as IPC process');
   }
   const args = process.argv.slice(2);
   const modulePath = args[0];
@@ -31,7 +31,7 @@ export async function main() {
     const { main: appium } = await import(modulePath);
     onMessage(async (message) => {
       switch (message.command) {
-        case "start":
+        case 'start':
           const { args } = message;
           console.log(
             'received "start" command; attempting to start appium on %s:%s',
@@ -40,15 +40,15 @@ export async function main() {
           );
           await appium(args);
           proc.send({
-            type: "started",
+            type: 'started',
             details: { address: args.address, port: args.port },
           });
           break;
       }
     });
-    proc.send({ type: "ready" });
+    proc.send({ type: 'ready' });
   } else {
-    proc.send({ type: "fail", reason: "No module path provided" });
+    proc.send({ type: 'fail', reason: 'No module path provided' });
     process.disconnect();
   }
 }

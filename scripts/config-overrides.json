@@ -1,0 +1,20 @@
+{
+  "appium.serverDefaults.callbackPort": {
+    "markdownDescription": "Callback port (default: same as `#appium.serverDefaults.port#`)"
+  },
+  "appium.serverDefaults.callbackAddress": {
+    "markdownDescription": "Callback IP address (default: same as `#appium.serverDefaults.address#`)"
+  },
+  "appium.serverDefaults.plugins": {
+    "markdownDescription": "A list of plugins to activate."
+  },
+  "appium.serverDefaults.tmp": {
+    "markdownDescription": "Absolute path to directory Appium can use to manage temp files. Defaults to `C:\\Windows\\Temp` on Windows and `/tmp` otherwise."
+  },
+  "appium.serverDefaults.denyInsecure": {
+    "markdownDescription": "Set which insecure features are not allowed to run in this server's sessions. Features are defined on a driver level; see driver documentation for more details. Features listed here will not be enabled even if also listed in `#appium.serverDefaults.allow-insecure#`, and even if `#appium.serverDefaults.relaxed-security#` is enabled."
+  },
+  "appium.serverDefaults.allowInsecure": {
+    "markdownDescription": "Set which insecure features are allowed to run in this server's sessions. Features are defined on a driver level; see driver documentation for more details. Note that features defined via `#appium.serverDefaults.deny-insecure#` will be disabled, even if also listed here."
+  }
+}
