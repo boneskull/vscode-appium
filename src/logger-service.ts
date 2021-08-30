@@ -1,39 +1,27 @@
-import { Disposable, window } from 'vscode';
+import { Disposable, ExtensionContext, window } from 'vscode';
 import { format as printf } from 'util';
-import { OUTPUT_CHANNEL_NAME } from './constants';
+import {
+  LOG_LEVEL,
+  DEFAULT_MODE_LOG_LEVEL,
+  OUTPUT_CHANNEL_NAME,
+} from './constants';
 
-/**
- * Log levels
- */
-export enum LogLevel {
-  DEBUG,
-  INFO,
-  WARN,
-  ERROR,
-  QUIET,
-}
-
-type LogLevelString = keyof typeof LogLevel;
-
-const HR_LOGLEVEL: LogLevelString[] = [
-  'DEBUG',
-  'INFO',
-  'WARN',
-  'ERROR',
-  'QUIET',
-];
+type LogLevelString = keyof typeof LOG_LEVEL;
 
 export class LoggerService implements Disposable {
-  private _logLevel: LogLevel = LogLevel.DEBUG;
+  private _logLevel: LOG_LEVEL = LOG_LEVEL.INFO;
   private outputChannel = window.createOutputChannel(OUTPUT_CHANNEL_NAME);
+
   /**
    * Instantiate with a log level, if desired
    */
-  constructor(logLevel?: LogLevel | LogLevelString) {
+  constructor(ctx: ExtensionContext, logLevel?: LOG_LEVEL | LogLevelString) {
     if (typeof logLevel === 'string') {
-      this.logLevel = LogLevel[logLevel];
+      this.logLevel = LOG_LEVEL[logLevel];
     } else if (typeof logLevel === 'number') {
       this.logLevel = logLevel;
+    } else {
+      this.logLevel = DEFAULT_MODE_LOG_LEVEL[ctx.extensionMode];
     }
   }
 
@@ -41,7 +29,7 @@ export class LoggerService implements Disposable {
     return this._logLevel;
   }
 
-  public set logLevel(value: LogLevel) {
+  public set logLevel(value: LOG_LEVEL) {
     this._logLevel = value;
   }
 
@@ -49,8 +37,8 @@ export class LoggerService implements Disposable {
    * Append messages to the output channel and format it with a title
    */
   public debug(...args: any[]) {
-    if (this.logLevel <= LogLevel.DEBUG) {
-      this.writeLog(LogLevel.DEBUG, ...args);
+    if (this.logLevel <= LOG_LEVEL.DEBUG) {
+      this.writeLog(LOG_LEVEL.DEBUG, ...args);
     }
   }
 
@@ -66,14 +54,14 @@ export class LoggerService implements Disposable {
    * Otherwise, just dump or write raw if `string`.
    */
   public error(error: Error | string) {
-    if (this.logLevel <= LogLevel.ERROR) {
+    if (this.logLevel <= LOG_LEVEL.ERROR) {
       if (typeof error === 'string') {
         // Errors as a string usually only happen with
         // plugins that don't return the expected error.
         this.write(error);
       } else if (error?.message || error?.stack) {
         if (error?.message) {
-          this.writeLog(LogLevel.ERROR, error.message);
+          this.writeLog(LOG_LEVEL.ERROR, error.message);
         }
         if (error?.stack) {
           this.write(error.stack);
@@ -95,8 +83,8 @@ export class LoggerService implements Disposable {
    * Append messages to the output channel and format it with a title
    */
   public info(...args: any[]): void {
-    if (this.logLevel <= LogLevel.INFO) {
-      this.writeLog(LogLevel.INFO, ...args);
+    if (this.logLevel <= LOG_LEVEL.INFO) {
+      this.writeLog(LOG_LEVEL.INFO, ...args);
     }
   }
 
@@ -111,20 +99,16 @@ export class LoggerService implements Disposable {
    * Append messages to the output channel and format it with a title
    */
   public warn(...args: any[]): void {
-    if (this.logLevel <= LogLevel.WARN) {
-      this.writeLog(LogLevel.WARN, ...args);
+    if (this.logLevel <= LOG_LEVEL.WARN) {
+      this.writeLog(LOG_LEVEL.WARN, ...args);
     }
   }
-
-  // #endregion Public Methods (7)
-
-  // #region Private Methods (3)
 
   /**
    * Object dumper; only visible at DEBUG level.
    */
   private dir(data: any) {
-    if (this.logLevel <= LogLevel.DEBUG) {
+    if (this.logLevel <= LOG_LEVEL.DEBUG) {
       this.write(this.format('%O', data));
     }
   }
@@ -142,16 +126,14 @@ export class LoggerService implements Disposable {
    * @param logLevel - The log level the message originates from
    * @param args - Set of printf-style args to be formatted
    */
-  private writeLog(logLevel: LogLevel, ...args: any[]) {
+  private writeLog(logLevel: LOG_LEVEL, ...args: any[]) {
     this.write(
       this.format(
         '%s [%s] %s',
-        HR_LOGLEVEL[logLevel],
+        LOG_LEVEL[logLevel],
         new Date().toLocaleTimeString(),
         this.format(...args)
       )
     );
   }
-
-  // #endregion Private Methods (3)
 }

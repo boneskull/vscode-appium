@@ -15,3 +15,5 @@ export async function startLocalServer(
     config.get('serverDefaults')
   );
 }
+
+startLocalServer.command = 'appium.startLocalServer';

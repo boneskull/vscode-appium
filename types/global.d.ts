@@ -56,7 +56,7 @@ declare global {
   }
 
   interface AppiumIPCStartCommand {
-    args: { [key: string]: string };
+    args: AppiumServerConfig;
     command: 'start';
     type: 'command';
   }

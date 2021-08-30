@@ -28,3 +28,5 @@ export async function attachToSession(
   //   session.attach();
   // }
 }
+
+attachToSession.command = 'appium.attachToSession';

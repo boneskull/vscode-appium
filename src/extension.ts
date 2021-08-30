@@ -1,10 +1,4 @@
-import {
-  commands,
-  workspace,
-  Disposable,
-  ExtensionContext,
-  tasks,
-} from 'vscode';
+import { commands, Disposable, ExtensionContext, tasks } from 'vscode';
 import { startLocalServer } from './commands/start-local-server';
 import { LocalServerService } from './local-server-service';
 import { LoggerService } from './logger-service';
@@ -12,49 +6,42 @@ import { ResolverService } from './resolver-service';
 import { attachToSession } from './commands/session-attach';
 import { AppiumTaskProvider } from './appium-task-provider';
 import { ConfigService } from './config-service';
+import { showOutput } from './commands/show-output';
 
-let disposables: Disposable[] = [];
+const disposables: Disposable[] = [];
 let log: LoggerService;
 
 export function activate(ctx: ExtensionContext) {
-  // I'm not sure if this is neccessary, but it's here just in case
-  if (!workspace.workspaceFolders || !workspace.workspaceFolders.length) {
-    return;
-  }
-
-  log = new LoggerService();
+  log = new LoggerService(ctx);
   const resolver = new ResolverService(log);
   const localServer = new LocalServerService(log);
   const config = new ConfigService(log);
 
-  log.info('Starting Appium extension');
-
-  disposables = [
+  disposables.push(
     tasks.registerTaskProvider(
       AppiumTaskProvider.taskType,
       new AppiumTaskProvider(log, resolver, config)
     ),
-    commands.registerCommand('appium.startLocalServer', () => {
+    commands.registerCommand(startLocalServer.command, () => {
       startLocalServer(log, resolver, localServer, config);
     }),
-    commands.registerCommand('appium.showOutput', () => {
-      log.show();
+    commands.registerCommand(showOutput.command, () => {
+      showOutput(log);
     }),
-    commands.registerCommand('appium.attachToSession', () => {
+    commands.registerCommand(attachToSession.command, () => {
       attachToSession(log, config);
     }),
     localServer,
-    log,
-  ];
+    log
+  );
 
   ctx.subscriptions.push(...disposables);
+
+  log.info('Activated %s from %s', ctx.extension.id, ctx.extensionPath);
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-  log.info('Disposing Appium extension');
-  for (let disposable of disposables) {
-    disposable.dispose();
-  }
-  log.dispose();
+  log.info('Disposing Appium extension. Bye!');
+  disposables.forEach((disposable) => disposable.dispose());
 }
