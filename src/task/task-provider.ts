@@ -8,29 +8,28 @@ import {
   Disposable,
   WorkspaceFolder,
 } from 'vscode';
-import { AppiumPseudoterminal } from './appium-pty';
-import { ConfigService } from './config-service';
-import { APPIUM_SERVER_TASK_TYPE } from './constants';
-import { LoggerService } from './logger-service';
-import { ResolverService } from './resolver-service';
+import { AppiumPseudoterminal } from '../pty';
+import { ConfigService } from '../service/config';
+import { APPIUM_SERVER_TASK_TYPE } from '../constants';
+import { LoggerService } from '../service/logger';
+import { ResolverService } from '../service/local-resolver';
 
 type AppiumTaskDefinition = AppiumServerConfig & TaskDefinition;
 
 export class AppiumTaskProvider implements TaskProvider, Disposable {
   /**
-   * The task type. This will be used to register the task provider.
-   */
-  static readonly taskType = APPIUM_SERVER_TASK_TYPE;
-
-  /**
    * Default task label
    */
   private static readonly label = 'Start Appium Server';
-
   /**
    * Task source
    */
   private static readonly source = 'appium';
+
+  /**
+   * The task type. This will be used to register the task provider.
+   */
+  static readonly taskType = APPIUM_SERVER_TASK_TYPE;
 
   constructor(
     private log: LoggerService,
@@ -38,7 +37,11 @@ export class AppiumTaskProvider implements TaskProvider, Disposable {
     private config: ConfigService
   ) {}
 
-  async provideTasks(token: CancellationToken): Promise<Task[]> {
+  public dispose() {
+    // TODO: should we save and dispose the pty?
+  }
+
+  public async provideTasks(token: CancellationToken): Promise<Task[]> {
     if (token.isCancellationRequested) {
       return [];
     }
@@ -68,26 +71,7 @@ export class AppiumTaskProvider implements TaskProvider, Disposable {
     ];
   }
 
-  /**
-   * Creates a {@link CustomExecution} task using {@link AppiumPseudoterminal}
-   * @param executable - Contains path to `appium` executable
-   * @param config - Contains configuration for the task.
-   */
-  private createCustomExecution(
-    executable: AppiumExecutable,
-    config: AppiumServerConfig
-  ) {
-    return new CustomExecution(
-      async (): Promise<AppiumPseudoterminal> =>
-        new AppiumPseudoterminal(this.log, executable, config)
-    );
-  }
-
-  public dispose() {
-    // TODO: should we save and dispose the pty?
-  }
-
-  async resolveTask(
+  public async resolveTask(
     task: Task,
     token: CancellationToken
   ): Promise<Task | undefined> {
@@ -111,6 +95,21 @@ export class AppiumTaskProvider implements TaskProvider, Disposable {
       executable,
       { ...this.config.get('serverDefaults'), ...definition },
       task.scope
+    );
+  }
+
+  /**
+   * Creates a {@link CustomExecution} task using {@link AppiumPseudoterminal}
+   * @param executable - Contains path to `appium` executable
+   * @param config - Contains configuration for the task.
+   */
+  private createCustomExecution(
+    executable: AppiumExecutable,
+    config: AppiumServerConfig
+  ) {
+    return new CustomExecution(
+      async (): Promise<AppiumPseudoterminal> =>
+        new AppiumPseudoterminal(this.log, executable, config)
     );
   }
 

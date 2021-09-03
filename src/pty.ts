@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import { format } from 'util';
-import { Disposable, EventEmitter, Pseudoterminal } from 'vscode';
-import { AppiumProcess } from './appium-process';
-import { LoggerService } from './logger-service';
+import { Disposable, EventEmitter, Pseudoterminal, Event } from 'vscode';
+import { AppiumProcess } from './process';
+import { LoggerService } from './service/logger';
 
 class NormalizingEventEmitter extends EventEmitter<string> {
   public fire(data: string) {
@@ -22,21 +22,30 @@ enum TerminationKeycodes {
 export class AppiumPseudoterminal implements Pseudoterminal, Disposable {
   private appium?: AppiumProcess;
 
-  public onDidWrite = this.ptyWriter.event;
+  private writeEmitter: NormalizingEventEmitter;
+  private closeEmitter: EventEmitter<void>;
+
+  public onDidWrite: Event<string>;
+  public onDidClose: Event<void>;
 
   constructor(
     private log: LoggerService,
     private executable: AppiumExecutable,
-    private config: AppiumServerConfig,
-    private ptyWriter: NormalizingEventEmitter = new NormalizingEventEmitter()
-  ) {}
+    private config: AppiumServerConfig
+  ) {
+    this.writeEmitter = new NormalizingEventEmitter();
+    this.closeEmitter = new EventEmitter<void>();
+
+    this.onDidWrite = this.writeEmitter.event;
+    this.onDidClose = this.closeEmitter.event;
+  }
 
   dispose() {
     this.appium?.dispose();
   }
 
   public open(): void {
-    this.ptyWriter.log(
+    this.writeEmitter.log(
       format(
         chalk.dim('Starting Appium v%s at %s with options: %O'),
         this.executable.version,
@@ -54,16 +63,17 @@ export class AppiumPseudoterminal implements Pseudoterminal, Disposable {
     appium
       .onStderr((data) => {
         this.log.debug('APPIUM: %s', data);
-        this.ptyWriter.fire(data);
+        this.writeEmitter.fire(data);
       })
       .onStdout((data) => {
         this.log.debug('APPIUM: %s', data);
-        this.ptyWriter.fire(data.toString());
+        this.writeEmitter.fire(data.toString());
       });
   }
 
   public close(): void {
-    // what to do?
+    this.appium?.kill();
+    this.closeEmitter.fire();
   }
 
   public handleInput(data: string): void {
@@ -71,10 +81,10 @@ export class AppiumPseudoterminal implements Pseudoterminal, Disposable {
       data === TerminationKeycodes.ctrlC ||
       data === TerminationKeycodes.ctrlD
     ) {
-      this.ptyWriter.log('Stopping local Appium server...');
+      this.writeEmitter.log('Stopping local Appium server...');
       this.appium?.dispose();
     } else {
-      this.ptyWriter.fire(data);
+      this.writeEmitter.fire(data);
     }
   }
 }

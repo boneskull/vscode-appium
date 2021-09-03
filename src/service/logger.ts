@@ -4,7 +4,7 @@ import {
   LOG_LEVEL,
   DEFAULT_MODE_LOG_LEVEL,
   OUTPUT_CHANNEL_NAME,
-} from './constants';
+} from '../constants';
 
 type LogLevelString = keyof typeof LOG_LEVEL;
 

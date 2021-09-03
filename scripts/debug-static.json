@@ -1,0 +1,49 @@
+{
+  "type": "appium",
+  "label": "Appium Debug",
+  "runtime": "node",
+  "languages": [
+    "javascript",
+    "typescript",
+    "javascriptreact",
+    "typescriptreact",
+    "ruby",
+    "python",
+    "java",
+    "csharp"
+  ],
+  "configurationAttributes": {
+    "launch": {
+      "required": ["program"],
+      "properties": {
+        "program": {
+          "type": "string",
+          "description": "The program to debug (not the server executable)."
+        }
+      }
+    }
+  },
+  "initialConfigurations": [
+    {
+      "type": "appium",
+      "request": "launch",
+      "name": "Launch Program",
+      "program": "${workspaceFolder}/test/test.js"
+    }
+  ],
+  "configurationSnippets": [
+    {
+      "label": "Appium: Run Script Locally",
+      "description": "A new configuration for starting a local Appium and running a script against it",
+      "body": {
+        "type": "appium",
+        "request": "launch",
+        "name": "${2:Launch Program}",
+        "program": "^\"\\${workspaceFolder}/${1:Program}\""
+      }
+    }
+  ],
+  "variables": {
+    "PickProcess": "extension.node-debug.pickNodeProcess"
+  }
+}

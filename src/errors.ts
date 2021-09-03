@@ -1,3 +1,4 @@
+import { window } from 'vscode';
 import { HTTPError, RequestError } from 'got';
 
 /**
@@ -37,3 +38,36 @@ export class UnknownError extends AggregateError {
     super([error], message);
   }
 }
+
+// interface WindowProxy {
+//   showErrorMessage: typeof window.showErrorMessage;
+//   showWarningMessage: typeof window.showWarningMessage;
+//   showInformationMessage: typeof window.showInformationMessage;
+// }
+
+// const windowProxy = new Proxy(
+//   <WindowProxy>{
+//     showErrorMessage: window.showErrorMessage,
+//     showWarningMessage: window.showWarningMessage,
+//     showInformationMessage: window.showInformationMessage,
+//   },
+//   {
+//     get(target, prop: keyof WindowProxy) {
+//       return (...args: any[]) => {
+//         if (prop in target) {
+//           if (args[0] instanceof Error) {
+//             return target[prop](args[0].message, ...args.slice(1));
+//           }
+//           return target[prop];
+//         }
+//       };
+//     },
+//   }
+// );
+
+// export const showErrorMessage = windowProxy.showErrorMessage;
+// export const showWarningMessage = windowProxy.showWarningMessage;
+// export const showInformationMessage = windowProxy.showInformationMessage;
+
+export const { showErrorMessage, showWarningMessage, showInformationMessage } =
+  window;

@@ -4,11 +4,11 @@ import readPkgUp from 'read-pkg-up';
 import path from 'path';
 import which from 'which';
 import execa from 'execa';
-import { LoggerService } from './logger-service';
+import { LoggerService } from './logger';
 import {
   BUNDLED_APPIUM_EXECUTABLE_PATH,
   BUNDLED_APPIUM_VERSION,
-} from './constants';
+} from '../constants';
 
 /**
  * Options for {@link ResolverService}.

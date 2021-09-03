@@ -29,6 +29,7 @@ export async function main() {
 
   if (modulePath) {
     const { main: appium } = await import(modulePath);
+
     onMessage(async (message) => {
       switch (message.command) {
         case 'start':
@@ -44,6 +45,9 @@ export async function main() {
             details: { address: args.address, port: args.port },
           });
           break;
+        default:
+          const _exhaustiveCheck: never = message.command;
+          return _exhaustiveCheck;
       }
     });
     proc.send({ type: 'ready' });

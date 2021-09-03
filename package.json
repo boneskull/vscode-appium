@@ -6,17 +6,25 @@
   "categories": [
     "Other"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "scripts": {
+    "precompile": "node ./scripts/gen-schema-declarations.mjs",
     "compile": "tsc -p ./",
     "lint": "eslint src --ext ts",
     "pretest": "npm run compile && npm run lint",
-    "test": "node ./out/test/runTest.js",
+    "test": "node ./dist/test/runTest.js",
     "vscode:prepublish": "npm run compile",
-    "watch": "tsc -watch -p ./",
-    "precompile": "node ./scripts/gen-schema-declarations.mjs"
+    "watch": "tsc -watch -p ./"
   },
   "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "appium",
+          "name": "Appium"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "appium.showOutput",
@@ -474,14 +482,269 @@
           }
         }
       }
+    ],
+    "debuggers": [
+      {
+        "type": "appium",
+        "label": "Appium Debug",
+        "runtime": "node",
+        "languages": [
+          "javascript",
+          "typescript",
+          "javascriptreact",
+          "typescriptreact",
+          "ruby",
+          "python",
+          "java",
+          "csharp"
+        ],
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "program"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "The program to debug (not the server executable)."
+              },
+              "address": {
+                "type": "string",
+                "default": "0.0.0.0",
+                "description": "IP address to listen on",
+                "format": "hostname"
+              },
+              "allowCors": {
+                "type": "boolean",
+                "default": false,
+                "description": "Whether the Appium server should allow web browser connections from any host"
+              },
+              "allowInsecure": {
+                "type": "array",
+                "default": [],
+                "items": {
+                  "type": "string"
+                },
+                "markdownDescription": "Set which insecure features are allowed to run in this server's sessions. Features are defined on a driver level; see driver documentation for more details. Note that features defined via `#appium.serverDefaults.deny-insecure#` will be disabled, even if also listed here."
+              },
+              "basePath": {
+                "type": "string",
+                "default": "",
+                "description": "Base path to use as the prefix for all webdriver routes running on the server"
+              },
+              "callbackAddress": {
+                "type": "string",
+                "markdownDescription": "Callback IP address (default: same as `#appium.serverDefaults.address#`)"
+              },
+              "callbackPort": {
+                "type": "integer",
+                "default": 4723,
+                "minimum": 1,
+                "maximum": 65535,
+                "markdownDescription": "Callback port (default: same as `#appium.serverDefaults.port#`)"
+              },
+              "debugLogSpacing": {
+                "type": "boolean",
+                "default": false,
+                "description": "Add exaggerated spacing in logs to help with visual inspection"
+              },
+              "defaultCapabilities": {
+                "type": "object",
+                "description": "Set the default desired capabilities, which will be set on each session unless overridden by received capabilities. If a string, a path to a JSON file containing the capabilities, or raw JSON."
+              },
+              "denyInsecure": {
+                "type": "array",
+                "default": [],
+                "items": {
+                  "type": "string"
+                },
+                "markdownDescription": "Set which insecure features are not allowed to run in this server's sessions. Features are defined on a driver level; see driver documentation for more details. Features listed here will not be enabled even if also listed in `#appium.serverDefaults.allow-insecure#`, and even if `#appium.serverDefaults.relaxed-security#` is enabled."
+              },
+              "drivers": {
+                "type": "array",
+                "default": "",
+                "description": "A list of drivers to activate. By default, all installed drivers will be activated.  If a string, must be valid JSON",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "keepAliveTimeout": {
+                "type": "integer",
+                "default": 600,
+                "description": "Number of seconds the Appium server should apply as both the keep-alive timeout and the connection timeout for all requests. A value of 0 disables the timeout.",
+                "minimum": 0
+              },
+              "localTimezone": {
+                "type": "boolean",
+                "default": false,
+                "description": "Use local timezone for timestamps"
+              },
+              "logFile": {
+                "type": "string",
+                "description": "Also send log output to this file"
+              },
+              "logFilters": {
+                "type": "array",
+                "description": "One or more log filtering rules",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "loglevel": {
+                "type": "string",
+                "default": "debug",
+                "description": "Log level (console[:file])",
+                "enum": [
+                  "info",
+                  "info:debug",
+                  "info:info",
+                  "info:warn",
+                  "info:error",
+                  "warn",
+                  "warn:debug",
+                  "warn:info",
+                  "warn:warn",
+                  "warn:error",
+                  "error",
+                  "error:debug",
+                  "error:info",
+                  "error:warn",
+                  "error:error",
+                  "debug",
+                  "debug:debug",
+                  "debug:info",
+                  "debug:warn",
+                  "debug:error"
+                ]
+              },
+              "logNoColors": {
+                "type": "boolean",
+                "default": false,
+                "description": "Do not use color in console output"
+              },
+              "logTimestamp": {
+                "type": "boolean",
+                "default": false,
+                "description": "Show timestamps in console output"
+              },
+              "longStacktrace": {
+                "type": "boolean",
+                "default": false,
+                "description": "Add long stack traces to log entries. Recommended for debugging only."
+              },
+              "noPermsCheck": {
+                "type": "boolean",
+                "default": false,
+                "description": "Do not check that needed files are readable and/or writable"
+              },
+              "nodeconfig": {
+                "type": "object",
+                "default": "",
+                "description": "Path to configuration JSON file to register Appium as a node with Selenium Grid 3; otherwise the configuration itself"
+              },
+              "plugins": {
+                "type": "array",
+                "default": "",
+                "items": {
+                  "type": "string"
+                },
+                "markdownDescription": "A list of plugins to activate."
+              },
+              "port": {
+                "type": "integer",
+                "default": 4723,
+                "description": "Port to listen on",
+                "minimum": 1,
+                "maximum": 65535
+              },
+              "relaxedSecurity": {
+                "type": "boolean",
+                "default": false,
+                "description": "Disable additional security checks, so it is possible to use some advanced features, provided by drivers supporting this option. Only enable it if all the clients are in the trusted network and it's not the case if a client could potentially break out of the session sandbox. Specific features can be overridden by using \"deny-insecure\""
+              },
+              "sessionOverride": {
+                "type": "boolean",
+                "default": false,
+                "description": "Enables session override (clobbering)"
+              },
+              "strictCaps": {
+                "type": "boolean",
+                "default": false,
+                "description": "Cause sessions to fail if desired caps are sent in that Appium does not recognize as valid for the selected device"
+              },
+              "tmp": {
+                "type": "string",
+                "markdownDescription": "Absolute path to directory Appium can use to manage temp files. Defaults to `C:\\Windows\\Temp` on Windows and `/tmp` otherwise."
+              },
+              "traceDir": {
+                "type": "string",
+                "description": "Absolute path to directory Appium can use to save iOS instrument traces; defaults to <tmp>/appium-instruments"
+              },
+              "webhook": {
+                "type": "string",
+                "description": "Also send log output to this http listener",
+                "format": "uri"
+              },
+              "configFile": {
+                "markdownDescription": "Explicit path to Appium config file",
+                "type": "string"
+              },
+              "useAllPlugins": {
+                "markdownDescription": "Enable all installed plugins.  Overrides `#appium.serverDefaults.plugins#`.",
+                "type": "boolean"
+              },
+              "appiumHome": {
+                "markdownDescription": "Path to `APPIUM_HOME` directory",
+                "type": "string"
+              },
+              "useBundledAppium": {
+                "markdownDescription": "Use bundled Appium. If `false`, look for a locally installed Appium or a globally installed Appium",
+                "type": "boolean",
+                "default": true
+              },
+              "executablePath": {
+                "markdownDescription": "Explicit path to Appium executable. If left blank, the extension will search for one or fall back to the bundled Appium.  Overrides `#appium.serverDefaults.useBundledAppium#`",
+                "type": "string"
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "appium",
+            "request": "launch",
+            "name": "Launch Program",
+            "program": "${workspaceFolder}/test/test.js"
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "Appium: Attach Configuration",
+            "description": "A new configuration for attaching to a running Appium server.",
+            "body": {
+              "type": "node",
+              "request": "attach",
+              "name": "${2:Attach to Port}",
+              "port": 9229
+            }
+          }
+        ],
+        "variables": {
+          "PickProcess": "extension.node-debug.pickNodeProcess"
+        }
+      }
     ]
   },
   "activationEvents": [
     "workspaceContains:**/node_modules/appium",
     "onCommand:appium.showOutput",
     "onCommand:appium.attachToSession",
-    "onCommand:workbench.action.tasks.runTask"
+    "onCommand:workbench.action.tasks.runTask",
+    "onView:appium"
   ],
+  "prettier": {
+    "singleQuote": true
+  },
   "dependencies": {
     "appium": "file:../appium/packages/appium",
     "chalk": "^4.1.1",
@@ -494,9 +757,7 @@
     "resolve-global": "^1.0.0",
     "semver": "^7.3.5",
     "ts-results": "^3.3.0",
-    "webdriverio": "^7.10.0",
-    "which": "^2.0.2",
-    "xstate": "^4.23.1"
+    "which": "^2.0.2"
   },
   "devDependencies": {
     "@types/glob": "^7.1.4",
@@ -508,18 +769,23 @@
     "@types/which": "^2.0.1",
     "@typescript-eslint/eslint-plugin": "^4.29.1",
     "@typescript-eslint/parser": "^4.29.1",
+    "@wdio/mocha-framework": "^7.11.1",
     "ajv": "^8.6.2",
     "camelcase": "^6.2.0",
     "eslint": "^7.32.0",
+    "fast-glob": "^3.2.7",
     "glob": "^7.1.7",
     "json-schema-to-typescript": "^10.1.4",
-    "mocha": "^9.0.3",
+    "mocha": "^9.1.1",
     "prettier": "^2.3.2",
     "read-pkg": "^6.0.0",
+    "rfdc": "^1.3.0",
     "ts-node": "^10.2.1",
     "type-fest": "^2.1.0",
     "typescript": "^4.3.2",
+    "unexpected": "^12.0.3",
     "vscode-test": "^1.6.1",
+    "webdriverio": "^7.11.1",
     "write-pkg": "^4.0.0"
   },
   "engines": {
@@ -527,7 +793,251 @@
   },
   "readme": "ERROR: No README data found!",
   "_id": "vscode-appium@0.0.1",
-  "prettier": {
-    "singleQuote": true
-  }
+  "debuggers": [
+    {
+      "type": "appium",
+      "label": "Appium Debug",
+      "runtime": "node",
+      "languages": [
+        "javascript",
+        "typescript",
+        "javascriptreact",
+        "typescriptreact",
+        "ruby",
+        "python",
+        "java",
+        "csharp"
+      ],
+      "configurationAttributes": {
+        "launch": {
+          "required": [
+            "program"
+          ],
+          "properties": {
+            "address": {
+              "type": "string",
+              "default": "0.0.0.0",
+              "description": "IP address to listen on",
+              "format": "hostname"
+            },
+            "allowCors": {
+              "type": "boolean",
+              "default": false,
+              "description": "Whether the Appium server should allow web browser connections from any host"
+            },
+            "allowInsecure": {
+              "type": "array",
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "markdownDescription": "Set which insecure features are allowed to run in this server's sessions. Features are defined on a driver level; see driver documentation for more details. Note that features defined via `#appium.serverDefaults.deny-insecure#` will be disabled, even if also listed here."
+            },
+            "basePath": {
+              "type": "string",
+              "default": "",
+              "description": "Base path to use as the prefix for all webdriver routes running on the server"
+            },
+            "callbackAddress": {
+              "type": "string",
+              "markdownDescription": "Callback IP address (default: same as `#appium.serverDefaults.address#`)"
+            },
+            "callbackPort": {
+              "type": "integer",
+              "default": 4723,
+              "minimum": 1,
+              "maximum": 65535,
+              "markdownDescription": "Callback port (default: same as `#appium.serverDefaults.port#`)"
+            },
+            "debugLogSpacing": {
+              "type": "boolean",
+              "default": false,
+              "description": "Add exaggerated spacing in logs to help with visual inspection"
+            },
+            "defaultCapabilities": {
+              "type": "object",
+              "description": "Set the default desired capabilities, which will be set on each session unless overridden by received capabilities. If a string, a path to a JSON file containing the capabilities, or raw JSON."
+            },
+            "denyInsecure": {
+              "type": "array",
+              "default": [],
+              "items": {
+                "type": "string"
+              },
+              "markdownDescription": "Set which insecure features are not allowed to run in this server's sessions. Features are defined on a driver level; see driver documentation for more details. Features listed here will not be enabled even if also listed in `#appium.serverDefaults.allow-insecure#`, and even if `#appium.serverDefaults.relaxed-security#` is enabled."
+            },
+            "drivers": {
+              "type": "array",
+              "default": "",
+              "description": "A list of drivers to activate. By default, all installed drivers will be activated.  If a string, must be valid JSON",
+              "items": {
+                "type": "string"
+              }
+            },
+            "keepAliveTimeout": {
+              "type": "integer",
+              "default": 600,
+              "description": "Number of seconds the Appium server should apply as both the keep-alive timeout and the connection timeout for all requests. A value of 0 disables the timeout.",
+              "minimum": 0
+            },
+            "localTimezone": {
+              "type": "boolean",
+              "default": false,
+              "description": "Use local timezone for timestamps"
+            },
+            "logFile": {
+              "type": "string",
+              "description": "Also send log output to this file"
+            },
+            "logFilters": {
+              "type": "array",
+              "description": "One or more log filtering rules",
+              "items": {
+                "type": "string"
+              }
+            },
+            "loglevel": {
+              "type": "string",
+              "default": "debug",
+              "description": "Log level (console[:file])",
+              "enum": [
+                "info",
+                "info:debug",
+                "info:info",
+                "info:warn",
+                "info:error",
+                "warn",
+                "warn:debug",
+                "warn:info",
+                "warn:warn",
+                "warn:error",
+                "error",
+                "error:debug",
+                "error:info",
+                "error:warn",
+                "error:error",
+                "debug",
+                "debug:debug",
+                "debug:info",
+                "debug:warn",
+                "debug:error"
+              ]
+            },
+            "logNoColors": {
+              "type": "boolean",
+              "default": false,
+              "description": "Do not use color in console output"
+            },
+            "logTimestamp": {
+              "type": "boolean",
+              "default": false,
+              "description": "Show timestamps in console output"
+            },
+            "longStacktrace": {
+              "type": "boolean",
+              "default": false,
+              "description": "Add long stack traces to log entries. Recommended for debugging only."
+            },
+            "noPermsCheck": {
+              "type": "boolean",
+              "default": false,
+              "description": "Do not check that needed files are readable and/or writable"
+            },
+            "nodeconfig": {
+              "type": "object",
+              "default": "",
+              "description": "Path to configuration JSON file to register Appium as a node with Selenium Grid 3; otherwise the configuration itself"
+            },
+            "plugins": {
+              "type": "array",
+              "default": "",
+              "items": {
+                "type": "string"
+              },
+              "markdownDescription": "A list of plugins to activate."
+            },
+            "port": {
+              "type": "integer",
+              "default": 4723,
+              "description": "Port to listen on",
+              "minimum": 1,
+              "maximum": 65535
+            },
+            "relaxedSecurity": {
+              "type": "boolean",
+              "default": false,
+              "description": "Disable additional security checks, so it is possible to use some advanced features, provided by drivers supporting this option. Only enable it if all the clients are in the trusted network and it's not the case if a client could potentially break out of the session sandbox. Specific features can be overridden by using \"deny-insecure\""
+            },
+            "sessionOverride": {
+              "type": "boolean",
+              "default": false,
+              "description": "Enables session override (clobbering)"
+            },
+            "strictCaps": {
+              "type": "boolean",
+              "default": false,
+              "description": "Cause sessions to fail if desired caps are sent in that Appium does not recognize as valid for the selected device"
+            },
+            "tmp": {
+              "type": "string",
+              "markdownDescription": "Absolute path to directory Appium can use to manage temp files. Defaults to `C:\\Windows\\Temp` on Windows and `/tmp` otherwise."
+            },
+            "traceDir": {
+              "type": "string",
+              "description": "Absolute path to directory Appium can use to save iOS instrument traces; defaults to <tmp>/appium-instruments"
+            },
+            "webhook": {
+              "type": "string",
+              "description": "Also send log output to this http listener",
+              "format": "uri"
+            },
+            "configFile": {
+              "markdownDescription": "Explicit path to Appium config file",
+              "type": "string"
+            },
+            "useAllPlugins": {
+              "markdownDescription": "Enable all installed plugins.  Overrides `#appium.serverDefaults.plugins#`.",
+              "type": "boolean"
+            },
+            "appiumHome": {
+              "markdownDescription": "Path to `APPIUM_HOME` directory",
+              "type": "string"
+            },
+            "useBundledAppium": {
+              "markdownDescription": "Use bundled Appium. If `false`, look for a locally installed Appium or a globally installed Appium",
+              "type": "boolean",
+              "default": true
+            },
+            "executablePath": {
+              "markdownDescription": "Explicit path to Appium executable. If left blank, the extension will search for one or fall back to the bundled Appium.  Overrides `#appium.serverDefaults.useBundledAppium#`",
+              "type": "string"
+            }
+          }
+        }
+      },
+      "initialConfigurations": [
+        {
+          "type": "appium",
+          "request": "launch",
+          "name": "Launch Program",
+          "program": "${workspaceFolder}/test/test.js"
+        }
+      ],
+      "configurationSnippets": [
+        {
+          "label": "Appium: Attach Configuration",
+          "description": "A new configuration for attaching to a running Appium server.",
+          "body": {
+            "type": "node",
+            "request": "attach",
+            "name": "${2:Attach to Port}",
+            "port": 9229
+          }
+        }
+      ],
+      "variables": {
+        "PickProcess": "extension.node-debug.pickNodeProcess"
+      }
+    }
+  ]
 }

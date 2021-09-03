@@ -1,4 +1,4 @@
-import { LoggerService } from '../logger-service';
+import { LoggerService } from '../service/logger';
 
 export function showOutput(log: LoggerService) {
   log.show();

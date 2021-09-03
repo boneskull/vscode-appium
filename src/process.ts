@@ -1,8 +1,7 @@
 import { APPIUM_HOME } from 'appium';
 import { node as fork, ExecaChildProcess } from 'execa';
-import { Readable } from 'stream';
 import { Disposable } from 'vscode';
-import { LoggerService } from './logger-service';
+import { LoggerService } from './service/logger';
 
 export class AppiumProcess implements Disposable {
   private proc?: ExecaChildProcess;
@@ -79,11 +78,12 @@ export class AppiumProcess implements Disposable {
     return this;
   }
 
-  public onStdout(listener: AppiumProcessDataListener): AppiumProcess {
-    this.proc?.stdout?.on('data', (data: Buffer) => {
-      listener(data.toString());
-    });
-    return this;
+  public dispose() {
+    this.kill();
+  }
+
+  public kill() {
+    this.proc?.kill('SIGINT');
   }
 
   public onStderr(listener: AppiumProcessDataListener): AppiumProcess {
@@ -93,8 +93,11 @@ export class AppiumProcess implements Disposable {
     return this;
   }
 
-  public dispose() {
-    this.proc?.kill('SIGINT');
+  public onStdout(listener: AppiumProcessDataListener): AppiumProcess {
+    this.proc?.stdout?.on('data', (data: Buffer) => {
+      listener(data.toString());
+    });
+    return this;
   }
 
   private sendCommand(command: AppiumIPCCommand['command'], ...extra: any[]) {

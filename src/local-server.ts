@@ -1,9 +1,13 @@
 import { Disposable, Terminal, window } from 'vscode';
-import { AppiumPseudoterminal } from './appium-pty';
-import { LoggerService } from './logger-service';
+import { AppiumPseudoterminal } from './pty';
+import { LoggerService } from './service/logger';
 
-export class LocalServerService implements Disposable {
+export class LocalServer implements Disposable {
   private term?: Terminal;
+  /**
+   * I don't know if disposing the Terminal causes the pty to dispose as well,
+   * so that's why this is here.
+   */
   private pty?: AppiumPseudoterminal;
 
   constructor(private log: LoggerService) {}
@@ -13,7 +17,7 @@ export class LocalServerService implements Disposable {
     this.term?.dispose();
   }
 
-  public async start(executable: AppiumExecutable, config: AppiumServerConfig) {
+  public start(executable: AppiumExecutable, config: AppiumServerConfig) {
     this.log.info(
       'Starting Appium server v%s at %s',
       executable.version,

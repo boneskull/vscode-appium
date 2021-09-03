@@ -5,9 +5,9 @@ import { ServerConfig } from './appium-config';
 declare global {
   interface AppiumExtensionServerConfig {
     appiumHome?: string;
+    configFile?: string;
     executablePath?: string;
     useAllPlugins?: boolean;
-    configFile?: string;
     useBundledAppium: boolean;
   }
 
@@ -22,6 +22,13 @@ declare global {
     protocol: 'http' | 'https';
     remoteAppiumVersion: '1.x' | '2.x';
     username?: string;
+    version?: string;
+  }
+
+  interface AppiumServerInfo {
+    host: string;
+    port: number;
+    version: string;
   }
 
   interface AppiumExtensionConfig {
@@ -66,12 +73,6 @@ declare global {
     type: 'started';
   }
 
-  interface AppiumSessionsResponse extends JsonObject {
-    sessionId?: string;
-    status: number;
-    value: { id: string }[];
-  }
-
   type AppiumIPCCommand = AppiumIPCStartCommand;
   type AppiumIPCMessage =
     | AppiumIPCReadyMessage
@@ -101,4 +102,10 @@ declare global {
     : P extends keyof T
     ? T[P]
     : never;
+}
+
+declare module '@wdio/types/build/Capabilities' {
+  interface SauceLabsCapabilities {
+    appiumVersion?: string;
+  }
 }

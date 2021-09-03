@@ -2,19 +2,24 @@
 // it OVERWRITES `package.json` so be careful
 
 import path from 'path';
-import {readPackageSync as readPkg} from 'read-pkg';
-import {sync as writePkg} from 'write-pkg';
+import { readPackageSync as readPkg } from 'read-pkg';
+import { sync as writePkg } from 'write-pkg';
 import camelcase from 'camelcase';
-import {createRequire} from 'module';
-import {APPIUM_SERVER_TASK_TYPE} from '../out/constants.js';
+import { createRequire } from 'module';
+import cloner from 'rfdc';
+
+const clone = cloner();
 
 // @ts-ignore
 const require = createRequire(import.meta.url);
 
-const STATIC_CONFIG_PROPS = Object.freeze(require('./config-static.json'));
-const CONFIG_OVERRIDES = Object.freeze(require('./config-overrides.json'));
+// const SERVER_DEBUG_CONFIGURATIONS = new Set(['launch']);
 const CONFIG_TITLE = 'Appium';
-const BASE_CONFIG_KEYPATH = Object.freeze(['appium']);
+const BASE_CONFIG_KEYPATH = 'appium';
+
+const staticConfigProps = clone(require('./config-static.json'));
+const configOverrides = clone(require('./config-overrides.json'));
+// const debugProps = clone(require('./debug-static.json'));
 
 // @ts-ignore
 const cwd = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -25,11 +30,11 @@ const configuration = {
 };
 
 const taskDef = {
-  type: APPIUM_SERVER_TASK_TYPE,
-  properties: {}
+  type: 'appium-server',
+  properties: {},
 };
 
-const pkg = readPkg({cwd});
+const pkg = readPkg({ cwd });
 
 /**
  * Given a property name `property`, rename it if needed.
@@ -39,7 +44,7 @@ function renameProperty(property) {
   return property === 'server' ? 'serverDefaults' : property;
 }
 
-/** 
+/**
  * @param {import('ajv').SchemaObject} baseObject - Base schema object
  * @param {string} key - Property name of `baseObject`
  * @param {string[]} [keypath] - Keypath prefix, if any
@@ -57,7 +62,10 @@ function transform(baseObject, key, keypath) {
     items,
     enum: enumValue,
   } = baseObject[key];
-  keypath = [...(keypath ?? BASE_CONFIG_KEYPATH), renameProperty(appiumDest ?? camelcase(key))];
+  keypath = [
+    ...(keypath ?? [BASE_CONFIG_KEYPATH]),
+    renameProperty(appiumDest ?? camelcase(key)),
+  ];
   let type;
 
   type = Array.isArray(rawType)
@@ -73,7 +81,7 @@ function transform(baseObject, key, keypath) {
     maximum,
     items,
     enum: enumValue,
-    ...(CONFIG_OVERRIDES[keypathString] ?? {}),
+    ...(configOverrides[keypathString] ?? {}),
   };
 
   // prefer markdownDescription over description
@@ -95,17 +103,28 @@ console.error('Found Appium schema; transforming');
 Object.keys(schema.properties).forEach((key) => {
   transform(schema.properties, key);
 });
-configuration.properties = {...configuration.properties, ...STATIC_CONFIG_PROPS};
+configuration.properties = {
+  ...configuration.properties,
+  ...staticConfigProps,
+};
 
-Object.keys(configuration.properties).forEach(keystring => {
+Object.keys(configuration.properties).forEach((keystring) => {
   if (keystring.startsWith('appium.serverDefaults')) {
-    const baseKeypath = keystring.split('.').slice(-1);
-    taskDef.properties[baseKeypath] = configuration.properties[keystring];
-  }    
+    const leafKeypath = keystring.split('.').slice(-1).shift();
+    taskDef.properties[leafKeypath] = configuration.properties[keystring];
+    // SERVER_DEBUG_CONFIGURATIONS.forEach(name => {
+    //   const attrs = debugProps.configurationAttributes;
+    //   if (!attrs[name]) {
+    //     attrs[name] = {properties: {}};
+    //   }
+    //   attrs[name].properties[leafKeypath] = configuration.properties[keystring];
+    // });
+  }
 });
 
 pkg.contributes.configuration = configuration;
 pkg.contributes.taskDefinitions = [taskDef];
+// pkg.contributes.debuggers = [debugProps];
 
 writePkg(cwd, pkg);
 console.error('ok');

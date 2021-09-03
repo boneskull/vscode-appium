@@ -1,12 +1,10 @@
-import { commands, Disposable, ExtensionContext, tasks } from 'vscode';
-import { startLocalServer } from './commands/start-local-server';
-import { LocalServerService } from './local-server-service';
-import { LoggerService } from './logger-service';
-import { ResolverService } from './resolver-service';
-import { attachToSession } from './commands/session-attach';
-import { AppiumTaskProvider } from './appium-task-provider';
-import { ConfigService } from './config-service';
-import { showOutput } from './commands/show-output';
+import { Disposable, ExtensionContext } from 'vscode';
+import { registerCommands } from './commands';
+import { registerDebuggers } from './debug';
+import { ConfigService } from './service/config';
+import { ResolverService } from './service/local-resolver';
+import { LoggerService } from './service/logger';
+import { registerTasks } from './task';
 
 const disposables: Disposable[] = [];
 let log: LoggerService;
@@ -14,24 +12,13 @@ let log: LoggerService;
 export function activate(ctx: ExtensionContext) {
   log = new LoggerService(ctx);
   const resolver = new ResolverService(log);
-  const localServer = new LocalServerService(log);
   const config = new ConfigService(log);
 
   disposables.push(
-    tasks.registerTaskProvider(
-      AppiumTaskProvider.taskType,
-      new AppiumTaskProvider(log, resolver, config)
-    ),
-    commands.registerCommand(startLocalServer.command, () => {
-      startLocalServer(log, resolver, localServer, config);
-    }),
-    commands.registerCommand(showOutput.command, () => {
-      showOutput(log);
-    }),
-    commands.registerCommand(attachToSession.command, () => {
-      attachToSession(log, config);
-    }),
-    localServer,
+    ...registerDebuggers(log, resolver, config),
+    ...registerTasks(log, resolver, config),
+    ...registerCommands(log, resolver, config),
+    config,
     log
   );
 

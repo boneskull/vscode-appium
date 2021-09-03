@@ -27,3 +27,6 @@ export const DEFAULT_MODE_LOG_LEVEL = {
   [ExtensionMode.Development]: LOG_LEVEL.DEBUG,
   [ExtensionMode.Production]: LOG_LEVEL.INFO,
 } as const;
+
+export const APPIUM_1_BASEPATH = '/wd/hub';
+export const APPIUM_2_BASEPATH = '';
