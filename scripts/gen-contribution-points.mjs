@@ -34,7 +34,10 @@ const taskDef = {
   properties: {},
 };
 
-const pkg = readPkg({ cwd });
+/**
+ * @type {any}
+ */
+const pkg = readPkg({ cwd, normalize: false });
 
 /**
  * Given a property name `property`, rename it if needed.
