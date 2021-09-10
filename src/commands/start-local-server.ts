@@ -8,9 +8,8 @@ export async function startLocalServer(
   resolver: ResolverService,
   config: ConfigService
 ) {
-  const executable = await resolver.resolve();
-  const localServer = new LocalServer(log);
-  const server = localServer.start(executable, config.get('serverDefaults'));
+  const localServer = new LocalServer(log, resolver);
+  const server = await localServer.start(config.get('serverDefaults'));
 }
 
 startLocalServer.command = 'appium.startLocalServer';

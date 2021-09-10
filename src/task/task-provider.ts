@@ -14,7 +14,7 @@ import { APPIUM_SERVER_TASK_TYPE } from '../constants';
 import { LoggerService } from '../service/logger';
 import { ResolverService } from '../service/local-resolver';
 
-type AppiumTaskDefinition = AppiumServerConfig & TaskDefinition;
+type AppiumTaskDefinition = AppiumLocalServerConfig & TaskDefinition;
 
 export class AppiumTaskProvider implements TaskProvider, Disposable {
   /**
@@ -43,6 +43,7 @@ export class AppiumTaskProvider implements TaskProvider, Disposable {
 
   public async provideTasks(token: CancellationToken): Promise<Task[]> {
     if (token.isCancellationRequested) {
+      this.log.debug('Canceling provideTasks() call');
       return [];
     }
 
@@ -63,9 +64,11 @@ export class AppiumTaskProvider implements TaskProvider, Disposable {
       ...defaultConfigValues,
     };
 
+    const config = ConfigService.compact(this.config.get('serverDefaults'));
+
     return [
       this.createTask(definition, executable, {
-        ...this.config.get('serverDefaults'),
+        ...config,
         ...definition,
       }),
     ];
@@ -90,10 +93,12 @@ export class AppiumTaskProvider implements TaskProvider, Disposable {
 
     this.log.debug('Creating task with executable: %j', executable);
 
+    const config = ConfigService.compact(this.config.get('serverDefaults'));
+
     return this.createTask(
       definition,
       executable,
-      { ...this.config.get('serverDefaults'), ...definition },
+      { ...config, ...definition },
       task.scope
     );
   }
@@ -105,8 +110,8 @@ export class AppiumTaskProvider implements TaskProvider, Disposable {
    */
   private createCustomExecution(
     executable: AppiumExecutable,
-    config: AppiumServerConfig
-  ) {
+    config: AppiumLocalServerConfig
+  ): CustomExecution {
     return new CustomExecution(
       async (): Promise<AppiumPseudoterminal> =>
         new AppiumPseudoterminal(this.log, executable, config)
@@ -123,7 +128,7 @@ export class AppiumTaskProvider implements TaskProvider, Disposable {
   private createTask(
     definition: AppiumTaskDefinition,
     executable: AppiumExecutable,
-    config: AppiumServerConfig,
+    config: AppiumLocalServerConfig,
     scope: WorkspaceFolder | TaskScope = TaskScope.Workspace
   ): Task {
     return new Task(

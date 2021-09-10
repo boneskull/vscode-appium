@@ -88,4 +88,27 @@ export class ConfigService implements Disposable {
     this.subscriptions.set(section, listeners);
     return this;
   }
+
+  /**
+   * Compacts an object by removing all undefined values, empty arrays, and empty strings.
+   * Does not remove empty objects
+   * @param obj Object to compact
+   * @returns
+   */
+  static compact<T extends { [key: string]: any }>(obj: T): Partial<T> {
+    return Object.keys(obj).reduce((acc, key) => {
+      const value = obj[key];
+      if (
+        !(
+          ((Array.isArray(value) || typeof value === 'string') &&
+            !value.length) ||
+          value === undefined ||
+          value === null
+        )
+      ) {
+        acc[key as keyof T] = value;
+      }
+      return acc;
+    }, {} as Partial<T>);
+  }
 }

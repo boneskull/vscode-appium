@@ -1,6 +1,6 @@
-import { APPIUM_HOME } from 'appium';
 import { node as fork, ExecaChildProcess } from 'execa';
 import { Disposable } from 'vscode';
+import { DEFAULT_APPIUM_HOME, SERVER_WRAPPER_PATH } from './constants';
 import { LoggerService } from './service/logger';
 
 export class AppiumProcess implements Disposable {
@@ -9,71 +9,63 @@ export class AppiumProcess implements Disposable {
   private constructor(
     private log: LoggerService,
     private executable: AppiumExecutable,
-    private config: AppiumServerConfig
+    private config: Partial<AppiumLocalServerConfig>
   ) {}
 
   public static create(
     log: LoggerService,
     executable: AppiumExecutable,
-    config: AppiumServerConfig
+    config: Partial<AppiumLocalServerConfig>
   ) {
     const appium = new AppiumProcess(log, executable, config);
     return appium.activate();
   }
 
   public activate(): AppiumProcess {
+    this.log.info('Spawning Appium...');
     if (this.proc) {
+      this.log.debug('Found running proc %O', this.proc);
       return this;
     }
 
-    const appiumHome: string = this.config.appiumHome ?? APPIUM_HOME;
-
-    this.log.info(
-      'Using command: node %s %s',
-      require.resolve('./appium-wrapper'),
-      this.executable.path
-    );
-
-    const appium = (this.proc = fork(
-      require.resolve('./appium-wrapper'),
-      [this.executable.path],
-      {
-        stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
-        env: {
-          APPIUM_HOME: appiumHome ?? process.env.APPIUM_HOME,
-        },
-      }
-    ));
-
-    appium
-      .on('message', (message: AppiumIPCMessage) => {
-        switch (message.type) {
-          case 'ready':
-            this.log.debug('subprocess ready');
-            this.sendCommand('start', {
-              args: this.config,
-            });
-            break;
-          case 'fail':
-            this.log.info('subprocess failed. reason: %s', message.reason);
-            // todo notification
-            break;
-          case 'started':
-            const { details } = message;
-            this.log.info(
-              'Appium server running on %s:%s',
-              details.address,
-              details.port
-            );
-            break;
-        }
-      })
-      .on('error', (err) => {
-        this.log.error(err);
-      })
-      .on('close', () => {
-        this.log.debug('subprocess closed');
-      });
+    try {
+      const appium = (this.proc = this.exec(
+        this.executable.path,
+        this.config.appiumHome
+      ));
+      appium
+        .on('message', (message: AppiumIPCMessage) => {
+          switch (message.type) {
+            case 'ready':
+              this.log.debug('subprocess ready');
+              this.sendCommand('start', {
+                args: this.config,
+              });
+              break;
+            case 'fail':
+              this.log.info('subprocess failed. reason: %s', message.reason);
+              // todo notification
+              break;
+            case 'started':
+              const { details } = message;
+              this.log.info(
+                'Appium server running on %s:%s',
+                details.address,
+                details.port
+              );
+              break;
+          }
+        })
+        .on('error', (err) => {
+          this.log.error(err);
+        })
+        .on('close', () => {
+          this.log.debug('subprocess closed');
+        });
+    } catch (err) {
+      this.log.error(String(err));
+      return this;
+    }
 
     return this;
   }
@@ -86,18 +78,41 @@ export class AppiumProcess implements Disposable {
     this.proc?.kill('SIGINT');
   }
 
-  public onStderr(listener: AppiumProcessDataListener): AppiumProcess {
+  public onData(listener: AppiumProcessDataListener): AppiumProcess {
     this.proc?.stderr?.on('data', (data: Buffer) => {
-      listener(data.toString());
+      if (this.proc) {
+        listener.call(this.proc, data.toString());
+      }
+    });
+    this.proc?.stdout?.on('data', (data: Buffer) => {
+      if (this.proc) {
+        listener.call(this.proc, data.toString());
+      }
     });
     return this;
   }
 
-  public onStdout(listener: AppiumProcessDataListener): AppiumProcess {
-    this.proc?.stdout?.on('data', (data: Buffer) => {
-      listener(data.toString());
+  /**
+   * Forks `appium`
+   * @param executablePath - Path to Appium executable
+   * @param appiumHome - Path to `APPIUM_HOME`
+   * @returns Appium child process
+   */
+  private exec(
+    executablePath: AppiumExecutable['path'],
+    appiumHome: string = DEFAULT_APPIUM_HOME
+  ): ExecaChildProcess {
+    this.log.info('APPIUM_HOME = %s', appiumHome);
+    this.log.info(
+      'Using command: node %s %s',
+      SERVER_WRAPPER_PATH,
+      executablePath
+    );
+
+    return fork(SERVER_WRAPPER_PATH, [executablePath], {
+      stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+      env: { APPIUM_HOME: appiumHome },
     });
-    return this;
   }
 
   private sendCommand(command: AppiumIPCCommand['command'], ...extra: any[]) {
@@ -111,4 +126,7 @@ export class AppiumProcess implements Disposable {
   }
 }
 
-type AppiumProcessDataListener = (data: string) => void;
+type AppiumProcessDataListener = (
+  this: ExecaChildProcess,
+  data: string
+) => void;

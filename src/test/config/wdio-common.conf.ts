@@ -9,7 +9,7 @@ export const config: WebdriverIO.Config = {
   // ==================
   // Specify Test Files
   // ==================
-  specs: ['./test/specs/login.spec.js', './test/specs/swag.items.list.spec.js'],
+  specs: ['../../../dist/test/e2e/test.spec.js'],
   // ============
   // Capabilities
   // ============

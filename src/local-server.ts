@@ -1,5 +1,6 @@
 import { Disposable, Terminal, window } from 'vscode';
 import { AppiumPseudoterminal } from './pty';
+import { ResolverService } from './service/local-resolver';
 import { LoggerService } from './service/logger';
 
 export class LocalServer implements Disposable {
@@ -10,14 +11,21 @@ export class LocalServer implements Disposable {
    */
   private pty?: AppiumPseudoterminal;
 
-  constructor(private log: LoggerService) {}
+  constructor(private log: LoggerService, private resolver?: ResolverService) {}
 
   public dispose() {
     this.pty?.dispose();
     this.term?.dispose();
   }
 
-  public start(executable: AppiumExecutable, config: AppiumServerConfig) {
+  public async start(
+    config: AppiumLocalServerConfig,
+    executable?: AppiumExecutable
+  ) {
+    if (!executable) {
+      this.resolver = this.resolver ?? new ResolverService(this.log);
+      executable = await this.resolver.resolve(config);
+    }
     this.log.info(
       'Starting Appium server v%s at %s',
       executable.version,

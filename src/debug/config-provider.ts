@@ -17,6 +17,26 @@ export class AppiumDebugConfigProvider implements DebugConfigurationProvider {
 
   constructor(private log: LoggerService) {}
 
+  public static isAppiumDebugConfiguration(
+    config: any
+  ): config is AppiumDebugConfiguration {
+    return (
+      AppiumDebugConfigProvider.isDebugConfiguration(config) && config.program
+    );
+  }
+
+  public static isDebugConfiguration(
+    config: any
+  ): config is DebugConfiguration {
+    return (
+      config &&
+      typeof config === 'object' &&
+      config.type &&
+      config.request &&
+      config.name
+    );
+  }
+
   public async resolveDebugConfiguration(
     folder: WorkspaceFolder | undefined,
     config: DebugConfiguration,
@@ -48,23 +68,5 @@ export class AppiumDebugConfigProvider implements DebugConfigurationProvider {
     }
 
     return config;
-  }
-
-  static isAppiumDebugConfiguration(
-    config: any
-  ): config is AppiumDebugConfiguration {
-    return (
-      AppiumDebugConfigProvider.isDebugConfiguration(config) && config.program
-    );
-  }
-
-  static isDebugConfiguration(config: any): config is DebugConfiguration {
-    return (
-      config &&
-      typeof config === 'object' &&
-      config.type &&
-      config.request &&
-      config.name
-    );
   }
 }

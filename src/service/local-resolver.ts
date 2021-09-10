@@ -189,5 +189,5 @@ export class ResolverService {
 }
 
 type ResolveOptions = Partial<
-  Pick<AppiumServerConfig, 'executablePath' | 'useBundledAppium'>
+  Pick<AppiumLocalServerConfig, 'executablePath' | 'useBundledAppium'>
 >;

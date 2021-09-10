@@ -31,7 +31,7 @@ export class AppiumPseudoterminal implements Pseudoterminal, Disposable {
   constructor(
     private log: LoggerService,
     private executable: AppiumExecutable,
-    private config: AppiumServerConfig
+    private config: Partial<AppiumLocalServerConfig>
   ) {
     this.writeEmitter = new NormalizingEventEmitter();
     this.closeEmitter = new EventEmitter<void>();
@@ -60,15 +60,10 @@ export class AppiumPseudoterminal implements Pseudoterminal, Disposable {
       this.config
     ));
 
-    appium
-      .onStderr((data) => {
-        this.log.debug('APPIUM: %s', data);
-        this.writeEmitter.fire(data);
-      })
-      .onStdout((data) => {
-        this.log.debug('APPIUM: %s', data);
-        this.writeEmitter.fire(data.toString());
-      });
+    appium.onData((data) => {
+      // this.log.debug('[appium]: %s', data);
+      this.writeEmitter.fire(data);
+    });
   }
 
   public close(): void {
