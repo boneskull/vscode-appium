@@ -1,9 +1,10 @@
-import { CamelCasedProperties, JsonObject } from 'type-fest';
+import { CamelCasedProperties } from 'type-fest';
 import { WorkspaceConfiguration } from 'vscode';
+import { AppiumServerBuild } from '../src/remote-server';
 import { ServerConfig } from './appium-config';
 
 declare global {
-  interface AppiumExtensionServerConfig {
+  interface AppiumExtensionLocalServerConfig {
     appiumHome?: string;
     configFile?: string;
     executablePath?: string;
@@ -11,28 +12,24 @@ declare global {
     useBundledAppium: boolean;
   }
 
-  type AppiumServerConfig = AppiumExtensionServerConfig &
+  type AppiumLocalServerConfig = AppiumExtensionLocalServerConfig &
     CamelCasedProperties<ServerConfig>;
 
   interface AppiumSessionConfig {
     host: string;
+    nickname?: string;
     password?: string;
     pathname?: string;
     port: number;
     protocol: 'http' | 'https';
     remoteAppiumVersion: '1.x' | '2.x';
+    serverConfig?: AppiumLocalServerConfig;
     username?: string;
     version?: string;
   }
 
-  interface AppiumServerInfo {
-    host: string;
-    port: number;
-    version: string;
-  }
-
   interface AppiumExtensionConfig {
-    serverDefaults: AppiumServerConfig;
+    serverDefaults: AppiumLocalServerConfig;
     sessionDefaults: AppiumSessionConfig;
   }
 
@@ -63,7 +60,7 @@ declare global {
   }
 
   interface AppiumIPCStartCommand {
-    args: AppiumServerConfig;
+    args: AppiumLocalServerConfig;
     command: 'start';
     type: 'command';
   }
@@ -102,6 +99,23 @@ declare global {
     : P extends keyof T
     ? T[P]
     : never;
+
+  interface AppiumSession {
+    id: string;
+    capabilities: Record<string, any>;
+    serverNickname: string;
+  }
+
+  interface AppiumServerInfo {
+    nickname: string;
+    host: string;
+    port: number;
+    status: {
+      build?: AppiumServerBuild;
+      online?: boolean;
+    };
+    sessions?: AppiumSession[];
+  }
 }
 
 declare module '@wdio/types/build/Capabilities' {

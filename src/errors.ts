@@ -39,6 +39,8 @@ export class UnknownError extends AggregateError {
   }
 }
 
+export type RemoteError = ConnectionRefusedError | NotFoundError | UnknownError;
+
 // interface WindowProxy {
 //   showErrorMessage: typeof window.showErrorMessage;
 //   showWarningMessage: typeof window.showWarningMessage;

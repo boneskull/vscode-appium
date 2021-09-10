@@ -5,6 +5,7 @@ import { ConfigService } from './service/config';
 import { ResolverService } from './service/local-resolver';
 import { LoggerService } from './service/logger';
 import { registerTasks } from './task';
+import { registerViews } from './view';
 
 const disposables: Disposable[] = [];
 let log: LoggerService;
@@ -18,6 +19,7 @@ export function activate(ctx: ExtensionContext) {
     ...registerDebuggers(log, resolver, config),
     ...registerTasks(log, resolver, config),
     ...registerCommands(log, resolver, config),
+    ...registerViews(log, config),
     config,
     log
   );

@@ -1,7 +1,7 @@
-import { URL } from 'url';
 import got from 'got';
-import { Ok, Err, Result } from 'ts-results';
-import { JsonObject, JsonValue } from 'type-fest';
+import { Err, Ok, Result } from 'ts-results';
+import { JsonObject } from 'type-fest';
+import { URL } from 'url';
 import {
   ConnectionRefusedError,
   isHTTPError,
@@ -21,22 +21,19 @@ export class RequestService {
   constructor(private log: LoggerService) {}
 
   /**
-   * Makes a request to a server for JSON data.
+   * Makes a `GET` request to a server for JSON data.
    * This function should never reject.
-   * @param opts - Connection options to build the URL
-   * @param extraPath - Extra path to append to the URL
+   * Use {@link RequestService.buildURL} to build the URL.
+   * @param url - URL to request
    */
   async json<T>(
-    opts: AppiumSessionConfig,
-    extraPath?: string
+    url: URL
   ): Promise<
     Result<
       AppiumResponse<T>,
       ConnectionRefusedError | NotFoundError | UnknownError
     >
   > {
-    const url = RequestService.buildURL(opts, extraPath);
-
     try {
       const result: AppiumResponse<T> = await got(url).json();
       this.log.debug('Response received: %j', result);
@@ -50,12 +47,7 @@ export class RequestService {
         }
       } else if (isHTTPError(err)) {
         if (err.code === '404') {
-          return Err(
-            new NotFoundError(
-              err,
-              `Path ${opts.pathname} not found (expected Appium server version ${opts.remoteAppiumVersion}--is it correct?)`
-            )
-          );
+          return Err(new NotFoundError(err, `${url} not found!`));
         }
       }
       return Err(new UnknownError(err, `Unknown error: ${String(err)}`));
@@ -71,10 +63,10 @@ export class RequestService {
       username,
       password,
     }: AppiumSessionConfig,
-    path?: string
+    ...path: string[]
   ): URL {
     if (path) {
-      const pathparts = [...pathname.split('/'), ...path.split('/')];
+      const pathparts = [...pathname.split('/'), ...path];
       pathname = pathparts.join('/');
     }
     const url = new URL(`${protocol}://${host}:${port}${pathname}`);
@@ -84,4 +76,6 @@ export class RequestService {
     }
     return url;
   }
+
+  buildURL = RequestService.buildURL;
 }

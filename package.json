@@ -25,6 +25,35 @@
         }
       ]
     },
+    "menus": {
+      "view/title": [
+        {
+          "command": "appium.refreshServers",
+          "when": "view == appium",
+          "group": "navigation"
+        },
+        {
+          "command": "appium.addServer",
+          "when": "view == appium"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "appium.editServer",
+          "when": "view == appium && viewItem == appiumServer"
+        },
+        {
+          "command": "appium.refreshServer",
+          "when": "view == appium && viewItem == appiumServer"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "appium",
+        "contents": "No Appium Servers configured. [Add Server](command:appium.addServer)"
+      }
+    ],
     "commands": [
       {
         "command": "appium.showOutput",
@@ -33,6 +62,26 @@
       {
         "command": "appium.attachToSession",
         "title": "Appium: Attach to Running Session"
+      },
+      {
+        "command": "appium.refreshServers",
+        "icon": "$(refresh)",
+        "title": "Refresh Servers"
+      },
+      {
+        "command": "appium.refreshServer",
+        "icon": "$(refresh)",
+        "title": "Refresh Server"
+      },
+      {
+        "command": "appium.editServer",
+        "icon": "$(edit)",
+        "title": "Edit Server"
+      },
+      {
+        "command": "appium.addServer",
+        "icon": "$(add)",
+        "title": "Add Server"
       }
     ],
     "configuration": {
@@ -755,6 +804,7 @@
     "appium": "file:../appium/packages/appium",
     "chalk": "^4.1.1",
     "execa": "^5.1.1",
+    "fast-equals": "^2.0.3",
     "global-dirs": "^3.0.0",
     "got": "^11.8.2",
     "isexe": "^2.0.0",
@@ -797,8 +847,6 @@
   "engines": {
     "vscode": "^1.57.0"
   },
-  "readme": "ERROR: No README data found!",
-  "_id": "vscode-appium@0.0.1",
   "debuggers": [
     {
       "type": "appium",
