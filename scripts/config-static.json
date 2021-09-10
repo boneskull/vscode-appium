@@ -45,5 +45,11 @@
   "appium.sessionDefaults.pathname": {
     "markdownDescription": "Override base pathname of Appium server; defaults to path depending on value of `#appium.sessionDefaults.remoteAppiumVersion#`",
     "type": "string"
+  },
+  "appium.sessionDefaults.refresh": {
+    "markdownDescription": "How often to poll a server for status information, in milliseconds",
+    "type": "number",
+    "minimum": "1",
+    "default": 10000
   }
 }
