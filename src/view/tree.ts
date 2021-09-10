@@ -3,6 +3,8 @@ import { LoggerService } from '../service/logger';
 import { AppiumTreeDataProvider } from './tree-data-provider';
 import { Disposable, window } from 'vscode';
 import { commands } from 'vscode';
+import { RequestService } from '../service/request';
+import { screenshot } from '../commands/screenshot';
 
 export function initTreeView(
   log: LoggerService,
@@ -24,6 +26,19 @@ export function initTreeView(
       (item: AppiumServerInfo) => {
         log.debug('Command: appium.refreshServer - %s', item);
         treeDataProvider.refresh(item);
+      }
+    ),
+    commands.registerCommand(
+      'appium.screenshot',
+      async ({ serverNickname, id }: AppiumSession) => {
+        if (treeDataProvider.hasServer(serverNickname)) {
+          const server = treeDataProvider.getServer(serverNickname)!;
+          return screenshot(log, server, id);
+        } else {
+          log.error(
+            'Session missing server reference, or server does not exist'
+          );
+        }
       }
     )
   );

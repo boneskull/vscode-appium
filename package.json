@@ -45,6 +45,11 @@
         {
           "command": "appium.refreshServer",
           "when": "view == appium && viewItem == appiumServer"
+        },
+        {
+          "command": "appium.screenshot",
+          "when": "view == appium && viewItem == appiumSession",
+          "group": "inline"
         }
       ]
     },
@@ -82,6 +87,11 @@
         "command": "appium.addServer",
         "icon": "$(add)",
         "title": "Add Server"
+      },
+      {
+        "command": "appium.screenshot",
+        "icon": "$(device-camera)",
+        "title": "Take Screenshot"
       }
     ],
     "configuration": {

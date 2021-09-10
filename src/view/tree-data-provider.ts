@@ -15,6 +15,7 @@ import {
   AppiumNoSessionsTreeItem,
 } from './tree-item';
 import { deepEqual } from 'fast-equals';
+import { isServerInfo, isSession } from '../guards';
 
 /**
  * This data provider uses these three types.  The first two are data objects.
@@ -49,6 +50,19 @@ export class AppiumTreeDataProvider
     // TODO: get configured servers
   }
 
+  public hasServer(nickname?: string) {
+    if (typeof nickname === 'string') {
+      return this.servers.has(nickname);
+    }
+    return false;
+  }
+
+  public getServer(nickname?: string) {
+    if (typeof nickname === 'string') {
+      return this.servers.get(nickname);
+    }
+  }
+
   public dispose() {
     this.disposables.forEach((disposable) => {
       disposable.dispose();
@@ -60,7 +74,7 @@ export class AppiumTreeDataProvider
   ): ProviderResult<AppiumTreeData[]> {
     if (element) {
       this.log.debug('getting children for %s', element);
-      if (AppiumTreeDataProvider.isServerInfo(element)) {
+      if (isServerInfo(element)) {
         return element.sessions?.length
           ? element.sessions
           : [new AppiumNoSessionsTreeItem(this.log, element)];
@@ -78,16 +92,18 @@ export class AppiumTreeDataProvider
   public getParent(
     element: AppiumServerInfo | AppiumSession
   ): AppiumServerInfo | undefined {
-    if (AppiumTreeDataProvider.isSession(element)) {
-      return this.servers.get(element.serverNickname);
+    if (isSession(element)) {
+      return element.serverNickname
+        ? this.servers.get(element.serverNickname)!
+        : undefined;
     }
   }
 
   public getTreeItem<T extends AppiumTreeData>(element: T): AppiumTreeItem<T> {
     let treeItem;
-    if (AppiumTreeDataProvider.isServerInfo(element)) {
+    if (isServerInfo(element)) {
       treeItem = new AppiumServerTreeItem(this.log, element);
-    } else if (AppiumTreeDataProvider.isSession(element)) {
+    } else if (isSession(element)) {
       treeItem = new AppiumSessionTreeItem(this.log, element);
     } else {
       treeItem = element;
@@ -96,23 +112,15 @@ export class AppiumTreeDataProvider
   }
 
   public refresh(element?: AppiumTreeData): void {
-    if (AppiumTreeDataProvider.isServerInfo(element)) {
+    if (isServerInfo(element)) {
       this.log.debug('Refreshing element %s', element.nickname);
       this.changeEmitter.fire(element);
-    } else if (AppiumTreeDataProvider.isSession(element)) {
+    } else if (isSession(element)) {
       // do nothing
     } else {
       this.log.debug('Appium tree root-level refresh');
       this.changeEmitter.fire(element);
     }
-  }
-
-  private static isServerInfo(value: any): value is AppiumServerInfo {
-    return value && typeof value === 'object' && value.host && value.port;
-  }
-
-  private static isSession(value: any): value is AppiumSession {
-    return value && typeof value === 'object' && value.id && value.capabilities;
   }
 
   private initDefaultServer() {

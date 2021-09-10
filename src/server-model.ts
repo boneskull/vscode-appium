@@ -5,17 +5,7 @@ import { LocalServer } from './local-server';
 import { LoggerService } from './service/logger';
 import { RequestService } from './service/request';
 
-export interface AppiumServerBuild {
-  version: string;
-  'git-sha': string;
-  built: string;
-}
-
-export interface AppiumStatus {
-  build: AppiumServerBuild;
-}
-
-export class RemoteServer {
+export class ServerModel {
   private request: RequestService;
   private localServer?: LocalServer;
   public readonly id: string;
@@ -23,8 +13,9 @@ export class RemoteServer {
   public readonly host: string;
   public readonly port: number;
   private _online?: boolean;
-  private _build?: AppiumServerBuild;
+  private _build?: AppiumBuild;
   public readonly nickname: string;
+  public readonly protocol: 'http' | 'https';
 
   constructor(
     protected log: LoggerService,
@@ -41,6 +32,7 @@ export class RemoteServer {
     this.host = this.config.host;
     this.port = this.config.port;
     this.nickname = this.config.nickname ?? this.id;
+    this.protocol = this.config.protocol;
   }
 
   get build() {
@@ -61,6 +53,7 @@ export class RemoteServer {
         online: this.online,
       },
       nickname: this.nickname,
+      protocol: this.protocol,
     };
   }
 
@@ -89,7 +82,10 @@ export class RemoteServer {
     return (await this.request.json<AppiumSession[]>(url))
       .map(({ value: sessions }) => {
         this.log.info('Found %d active sessions', sessions.length);
-        this.sessions = sessions;
+        this.sessions = sessions.map((session) => ({
+          serverNickname: this.nickname,
+          ...session,
+        }));
         this._online = true;
         return sessions;
       })
@@ -97,6 +93,23 @@ export class RemoteServer {
         this._online = false;
         return err;
       });
+  }
+
+  public async getScreenshot(id: string): Promise<Result<string, RemoteError>> {
+    const result = await this.request.json<string>(
+      this.config,
+      'screenshot',
+      id
+    );
+    const { url } = result.context;
+    return result.map(({ value: screenshot }) => {
+      this.log.info(
+        'Retrieved base64-encoded screenshot of size %d from %s',
+        screenshot.length,
+        url
+      );
+      return screenshot;
+    });
   }
 
   // public async getSession(

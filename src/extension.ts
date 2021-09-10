@@ -1,5 +1,5 @@
 import { Disposable, ExtensionContext } from 'vscode';
-import { registerCommands } from './commands';
+import { registerContextFreeCommands } from './commands';
 import { registerDebuggers } from './debug';
 import { ConfigService } from './service/config';
 import { ResolverService } from './service/local-resolver';
@@ -18,7 +18,7 @@ export function activate(ctx: ExtensionContext) {
   disposables.push(
     ...registerDebuggers(log, resolver, config),
     ...registerTasks(log, resolver, config),
-    ...registerCommands(log, resolver, config),
+    ...registerContextFreeCommands(log, resolver, config),
     ...registerViews(log, config),
     config,
     log

@@ -1,4 +1,4 @@
-import got from 'got';
+import got, { OptionsOfJSONResponseBody } from 'got';
 import { Err, Ok, Result } from 'ts-results';
 import { JsonObject } from 'type-fest';
 import { URL } from 'url';
@@ -11,11 +11,19 @@ import {
 } from '../errors';
 import { LoggerService } from './logger';
 
+type RequestError = ConnectionRefusedError | NotFoundError | UnknownError;
+
 interface AppiumResponse<T> extends JsonObject {
   sessionId: null | string;
   status: number;
   value: T;
 }
+
+type AppiumRequestResult<T> = AppiumResult<
+  AppiumResponse<T>,
+  RequestError,
+  { url: URL }
+>;
 
 export class RequestService {
   constructor(private log: LoggerService) {}
@@ -27,31 +35,56 @@ export class RequestService {
    * @param url - URL to request
    */
   async json<T>(
-    url: URL
-  ): Promise<
-    Result<
-      AppiumResponse<T>,
-      ConnectionRefusedError | NotFoundError | UnknownError
-    >
-  > {
-    try {
-      const result: AppiumResponse<T> = await got(url).json();
-      this.log.debug('Response received: %j', result);
-      return Ok(result);
-    } catch (err) {
+    server: AppiumSessionConfig,
+    endpoint: string,
+    sessionId?: string
+  ): Promise<AppiumRequestResult<T>>;
+  async json<T>(
+    url: URL,
+    opts?: OptionsOfJSONResponseBody
+  ): Promise<AppiumRequestResult<T>>;
+  async json<T>(
+    urlOrServer: URL | AppiumSessionConfig,
+    optsOrEndpoint?: OptionsOfJSONResponseBody | string,
+    sessionId?: string
+  ): Promise<AppiumRequestResult<T>> {
+    let url: URL;
+    let opts: OptionsOfJSONResponseBody;
+    if (urlOrServer instanceof URL) {
+      url = urlOrServer;
+      opts = <OptionsOfJSONResponseBody>optsOrEndpoint;
+    } else {
+      const serverInfo = urlOrServer;
+      const endpoint = <string>optsOrEndpoint;
+      const pathParts = sessionId
+        ? ['session', sessionId, endpoint]
+        : [endpoint];
+      url = RequestService.buildURL(serverInfo, ...pathParts);
+      opts = {};
+    }
+    const handleError = RequestService.createErrorHandler(url);
+    const result = await Result.wrapAsync<AppiumResponse<T>, RequestError>(() =>
+      got(url, opts).json()
+    );
+
+    return <AppiumRequestResult<T>>(
+      Object.assign(result.mapErr(handleError), { context: { url } })
+    );
+  }
+
+  private static createErrorHandler(url: URL) {
+    return (err: unknown): RequestError => {
       if (isRequestError(err)) {
         if (err.code === 'ECONNREFUSED') {
-          return Err(
-            new ConnectionRefusedError(err, `Failed to connect to ${url}`)
-          );
+          return new ConnectionRefusedError(err, `Failed to connect to ${url}`);
         }
       } else if (isHTTPError(err)) {
         if (err.code === '404') {
-          return Err(new NotFoundError(err, `${url} not found!`));
+          return new NotFoundError(err, `${url} not found!`);
         }
       }
-      return Err(new UnknownError(err, `Unknown error: ${String(err)}`));
-    }
+      return new UnknownError(err, `Unknown error: ${String(err)}`);
+    };
   }
 
   static buildURL(

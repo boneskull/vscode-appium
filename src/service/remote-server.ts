@@ -1,6 +1,6 @@
 import { Err, Ok, Result } from 'ts-results';
 import { Disposable, EventEmitter } from 'vscode';
-import { RemoteServer } from '../remote-server';
+import { ServerModel } from '../server-model';
 import { ConfigService } from './config';
 import { LoggerService } from './logger';
 
@@ -18,7 +18,7 @@ export class RemoteServerService implements Disposable {
   private updateEmitter: AppiumServerInfoEmitter = new EventEmitter();
   private disposables: Disposable[];
   private lastRequestStatus?: Ok<any> | Err<any>;
-  private pollers: Map<RemoteServer, NodeJS.Timeout> = new Map();
+  private pollers: Map<ServerModel, NodeJS.Timeout> = new Map();
 
   public readonly onDidUpdateServer = this.updateEmitter.event;
 
@@ -66,7 +66,7 @@ export class RemoteServerService implements Disposable {
    * @returns A disposable that stops polling.
    */
   public watch(config: AppiumSessionConfig, refreshMS = 10000): ServerWatcher {
-    const server = new RemoteServer(this.log, config);
+    const server = new ServerModel(this.log, config);
     setTimeout(async () => {
       await this.poll(server);
       this.pollers.set(
@@ -86,7 +86,7 @@ export class RemoteServerService implements Disposable {
     };
   }
 
-  private async poll(server: RemoteServer) {
+  private async poll(server: ServerModel) {
     const [statusResult, sessionsResult] = await Promise.all([
       server.getStatus(),
       server.getSessions(),

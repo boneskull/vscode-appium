@@ -1,6 +1,6 @@
+import { Err, Ok, Result } from 'ts-results';
 import { CamelCasedProperties } from 'type-fest';
 import { WorkspaceConfiguration } from 'vscode';
-import { AppiumServerBuild } from '../src/remote-server';
 import { ServerConfig } from './appium-config';
 
 declare global {
@@ -22,7 +22,7 @@ declare global {
     pathname?: string;
     port: number;
     protocol: 'http' | 'https';
-    remoteAppiumVersion: '1.x' | '2.x';
+    remoteAppiumVersion?: '1.x' | '2.x';
     serverConfig?: AppiumLocalServerConfig;
     username?: string;
     version?: string;
@@ -31,6 +31,41 @@ declare global {
   interface AppiumExtensionConfig {
     serverDefaults: AppiumLocalServerConfig;
     sessionDefaults: AppiumSessionConfig;
+  }
+
+  interface AppiumSession {
+    id: string;
+    capabilities: Record<string, any>;
+    serverNickname?: string;
+  }
+
+  interface AppiumServerInfo extends AppiumSessionConfig {
+    nickname: string;
+    host: string;
+    port: number;
+    status: {
+      build?: AppiumBuild;
+      online?: boolean;
+    };
+    sessions?: AppiumSession[];
+  }
+
+  type AppiumResultContext<C = object> = { context: C };
+
+  type AppiumOkResult<T, C> = Ok<T> & AppiumResultContext<C>;
+
+  type AppiumErrResult<E, C> = Err<E> & AppiumResultContext<C>;
+
+  type AppiumResult<T, E, C> = AppiumOkResult<T, C> | AppiumErrResult<E, C>;
+
+  interface AppiumBuild {
+    version: string;
+    'git-sha': string;
+    built: string;
+  }
+
+  interface AppiumStatus {
+    build: AppiumBuild;
   }
 
   type AppiumWorkspaceConfiguration = AppiumExtensionConfig &
@@ -99,23 +134,6 @@ declare global {
     : P extends keyof T
     ? T[P]
     : never;
-
-  interface AppiumSession {
-    id: string;
-    capabilities: Record<string, any>;
-    serverNickname: string;
-  }
-
-  interface AppiumServerInfo {
-    nickname: string;
-    host: string;
-    port: number;
-    status: {
-      build?: AppiumServerBuild;
-      online?: boolean;
-    };
-    sessions?: AppiumSession[];
-  }
 }
 
 declare module '@wdio/types/build/Capabilities' {

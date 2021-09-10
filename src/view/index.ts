@@ -1,7 +1,7 @@
 import { Disposable } from 'vscode';
 import { ConfigService } from '../service/config';
 import { LoggerService } from '../service/logger';
-import { initTreeView } from './treeview';
+import { initTreeView } from './tree';
 
 export function registerViews(
   log: LoggerService,

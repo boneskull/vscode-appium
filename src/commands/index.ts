@@ -6,7 +6,14 @@ import { LoggerService } from '../service/logger';
 import { ResolverService } from '../service/local-resolver';
 import { ConfigService } from '../service/config';
 
-export function registerCommands(
+/**
+ * Registers a bunch of commands that don't have any context in the UI.
+ * @param log - Logger
+ * @param resolver - Resolver
+ * @param config - config
+ * @returns A bunch of disposables
+ */
+export function registerContextFreeCommands(
   log: LoggerService,
   resolver: ResolverService,
   config: ConfigService
