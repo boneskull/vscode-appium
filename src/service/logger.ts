@@ -8,6 +8,8 @@ import {
 
 type LogLevelString = keyof typeof LOG_LEVEL;
 
+let logger: LoggerService;
+
 export class LoggerService implements Disposable {
   private _logLevel: LOG_LEVEL = LOG_LEVEL.INFO;
   private outputChannel = window.createOutputChannel(OUTPUT_CHANNEL_NAME);
@@ -15,7 +17,10 @@ export class LoggerService implements Disposable {
   /**
    * Instantiate with a log level, if desired
    */
-  constructor(ctx: ExtensionContext, logLevel?: LOG_LEVEL | LogLevelString) {
+  private constructor(
+    ctx: ExtensionContext,
+    logLevel?: LOG_LEVEL | LogLevelString
+  ) {
     if (typeof logLevel === 'string') {
       this.logLevel = LOG_LEVEL[logLevel];
     } else if (typeof logLevel === 'number') {
@@ -23,6 +28,21 @@ export class LoggerService implements Disposable {
     } else {
       this.logLevel = DEFAULT_MODE_LOG_LEVEL[ctx.extensionMode];
     }
+  }
+
+  public static get(
+    ctx?: ExtensionContext,
+    logLevel?: LOG_LEVEL | LogLevelString
+  ) {
+    if (logger) {
+      return logger;
+    }
+    if (!ctx) {
+      throw new ReferenceError(
+        'must pass ExtensionContext on first initialization'
+      );
+    }
+    return (logger = new LoggerService(ctx, logLevel));
   }
 
   public get logLevel() {
