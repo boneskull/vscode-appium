@@ -19,6 +19,7 @@ const SCHEMA_PATH = require.resolve(
 const DECLARATIONS_PATH = path.join(
   __dirname,
   '..',
+  'src',
   'types',
   'appium-config.d.ts',
 );

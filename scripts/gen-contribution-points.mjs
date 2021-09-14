@@ -89,6 +89,8 @@ function transform(baseObject, key, keypath) {
 
   // prefer markdownDescription over description
   if (def.markdownDescription) {
+    // save this in case we need it. if `description` is present, vscode prefers it over `markdownDescription`
+    def._description = def.description;
     delete def.description;
   }
 

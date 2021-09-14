@@ -5,19 +5,23 @@
   },
   "appium.serverDefaults.useAllPlugins": {
     "markdownDescription": "Enable all installed plugins.  Overrides `#appium.serverDefaults.plugins#`.",
+    "_description": "Enable all installed plugins.",
     "type": "boolean"
   },
   "appium.serverDefaults.appiumHome": {
     "markdownDescription": "Path to `APPIUM_HOME` directory",
+    "_description": "Path to \"APPIUM_HOME\" directory",
     "type": "string"
   },
   "appium.serverDefaults.useBundledAppium": {
     "markdownDescription": "Use bundled Appium. If `false`, look for a locally installed Appium or a globally installed Appium",
+    "_description": "Use bundled Appium. If \"false\", look for a locally installed Appium or a globally installed Appium",
     "type": "boolean",
     "default": true
   },
   "appium.serverDefaults.executablePath": {
     "markdownDescription": "Explicit path to Appium executable. If left blank, the extension will search for one or fall back to the bundled Appium.  Overrides `#appium.serverDefaults.useBundledAppium#`",
+    "_description": "Explicit path to Appium executable. If left blank, the extension will search for one or fall back to the bundled Appium.  Overrides \"appium.serverDefaults.useBundledAppium\"",
     "type": "string"
   },
   "appium.sessionDefaults.remoteAppiumVersion": {
@@ -44,10 +48,11 @@
   },
   "appium.sessionDefaults.pathname": {
     "markdownDescription": "Override base pathname of Appium server; defaults to path depending on value of `#appium.sessionDefaults.remoteAppiumVersion#`",
+    "_description": "Override base pathname of Appium server; defaults to path depending on value of \"remoteAppiumVersion\"",
     "type": "string"
   },
   "appium.sessionDefaults.refresh": {
-    "markdownDescription": "How often to poll a server for status information, in milliseconds",
+    "markdownDescription": "Interval at which to poll known servers for status (in milliseconds)",
     "type": "number",
     "minimum": "1",
     "default": 10000
