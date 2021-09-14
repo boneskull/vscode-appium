@@ -134,6 +134,12 @@ declare global {
     : P extends keyof T
     ? T[P]
     : never;
+
+  type ConfigPath = Path<AppiumExtensionConfig>;
+  type ConfigPathValue<S extends ConfigPath> = PathValue<
+    AppiumExtensionConfig,
+    S
+  >;
 }
 
 declare module '@wdio/types/build/Capabilities' {
