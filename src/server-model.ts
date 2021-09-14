@@ -111,17 +111,4 @@ export class ServerModel {
       return screenshot;
     });
   }
-
-  // public async getSession(
-  //   id: string
-  // ): Promise<Result<AppiumSession, RemoteError>> {
-  //   const url = this.request.buildURL(this.config, 'session', id);
-  //   const result = (await this.request.json<AppiumSession>(url)).map(
-  //     ({ value }) => value
-  //   );
-  //   if (result.ok) {
-  //     this.log.info('Found session id %s', result.safeUnwrap());
-  //   }
-  //   return result;
-  // }
 }

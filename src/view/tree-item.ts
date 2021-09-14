@@ -16,17 +16,7 @@ export class AppiumServerTreeItem implements AppiumTreeItem<AppiumServerInfo> {
     this.id = `${info.host}:${info.port}`;
   }
 
-  get label() {
-    return this.info.nickname ?? `${this.info.host}:${this.info.port}`;
-  }
-
-  get iconPath() {
-    return new ThemeIcon(
-      this.info.status.build?.version ? 'vm-running' : 'vm-outline'
-    );
-  }
-
-  get collapsibleState() {
+  public get collapsibleState() {
     return this.info.status.online
       ? this.info.sessions?.length
         ? TreeItemCollapsibleState.Expanded
@@ -34,15 +24,25 @@ export class AppiumServerTreeItem implements AppiumTreeItem<AppiumServerInfo> {
       : TreeItemCollapsibleState.Collapsed;
   }
 
-  get tooltip() {
+  public get description() {
+    return this.info.status.online ? 'ONLINE' : 'OFFLINE';
+  }
+
+  public get iconPath() {
+    return new ThemeIcon(
+      this.info.status.build?.version ? 'vm-running' : 'vm-outline'
+    );
+  }
+
+  public get label() {
+    return this.info.nickname ?? `${this.info.host}:${this.info.port}`;
+  }
+
+  public get tooltip() {
     if (this.info.status.build?.version) {
       return `**${this.label}** (v${this.info.status.build.version}) - _ONLINE_`;
     }
     return `**${this.label}** - _OFFLINE_`;
-  }
-
-  get description() {
-    return this.info.status.online ? 'ONLINE' : 'OFFLINE';
   }
 
   public toString(): string {
@@ -73,11 +73,12 @@ export class AppiumNoSessionsTreeItem
   extends TreeItem
   implements AppiumTreeItem<string>
 {
+  static readonly contextValue = 'appiumNoSessions';
+
+  public contextValue = AppiumNoSessionsTreeItem.contextValue;
+
   constructor(private log: LoggerService, private info: AppiumServerInfo) {
     super('(no active sessions)');
     this.id = `appiumNoSessions-${info.host}:${info.port}`;
   }
-
-  static readonly contextValue = 'appiumNoSessions';
-  public contextValue = AppiumNoSessionsTreeItem.contextValue;
 }

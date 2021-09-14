@@ -4,12 +4,12 @@ import { ResolverService } from './service/local-resolver';
 import { LoggerService } from './service/logger';
 
 export class LocalServer implements Disposable {
-  private term?: Terminal;
   /**
    * I don't know if disposing the Terminal causes the pty to dispose as well,
    * so that's why this is here.
    */
   private pty?: AppiumPseudoterminal;
+  private term?: Terminal;
 
   constructor(private log: LoggerService, private resolver?: ResolverService) {}
 

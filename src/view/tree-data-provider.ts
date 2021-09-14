@@ -50,19 +50,6 @@ export class AppiumTreeDataProvider
     // TODO: get configured servers
   }
 
-  public hasServer(nickname?: string) {
-    if (typeof nickname === 'string') {
-      return this.servers.has(nickname);
-    }
-    return false;
-  }
-
-  public getServer(nickname?: string) {
-    if (typeof nickname === 'string') {
-      return this.servers.get(nickname);
-    }
-  }
-
   public dispose() {
     this.disposables.forEach((disposable) => {
       disposable.dispose();
@@ -99,6 +86,12 @@ export class AppiumTreeDataProvider
     }
   }
 
+  public getServer(nickname?: string) {
+    if (typeof nickname === 'string') {
+      return this.servers.get(nickname);
+    }
+  }
+
   public getTreeItem<T extends AppiumTreeData>(element: T): AppiumTreeItem<T> {
     let treeItem;
     if (isServerInfo(element)) {
@@ -109,6 +102,13 @@ export class AppiumTreeDataProvider
       treeItem = element;
     }
     return treeItem;
+  }
+
+  public hasServer(nickname?: string) {
+    if (typeof nickname === 'string') {
+      return this.servers.has(nickname);
+    }
+    return false;
   }
 
   public refresh(element?: AppiumTreeData): void {
