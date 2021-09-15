@@ -18,7 +18,7 @@ export function activate(ctx: ExtensionContext) {
   disposables.push(
     ...registerTasks(log, resolver, config),
     ...registerContextFreeCommands(log, resolver, config),
-    ...registerViews(log, config),
+    ...registerViews(log, config, ctx),
     ServerEditorProvider.register(ctx),
     config,
     log

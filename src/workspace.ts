@@ -3,12 +3,9 @@ import { window, workspace } from 'vscode';
 export function getCurrentWorkspaceFolderUri() {
   const textEditor = window.activeTextEditor;
   if (!textEditor) {
-    return;
+    return workspace.workspaceFolders?.[0]?.uri;
   }
   const { document } = textEditor;
   const workspaceFolder = workspace.getWorkspaceFolder(document.uri);
-  if (!workspaceFolder) {
-    return;
-  }
-  return workspaceFolder.uri;
+  return workspaceFolder?.uri;
 }

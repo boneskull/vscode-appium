@@ -1,4 +1,5 @@
-import { Err, Ok, Result } from 'ts-results';
+import { Err, Ok } from 'ts-results';
+import { JSONSchema7 } from 'json-schema';
 import { CamelCasedProperties } from 'type-fest';
 import { WorkspaceConfiguration } from 'vscode';
 import { ServerConfig } from './appium-config';
@@ -140,6 +141,32 @@ declare global {
     AppiumExtensionConfig,
     S
   >;
+
+  /**
+   * The configuration definitions in the `contributions` section of the extension manifest
+   * are essentially just JSON Schema definitions.  We take those and add some contextual info, which is this.
+   */
+  interface AppiumSettingsJsonMetadata extends JSONSchema7 {
+    /**
+     * Corresponds to the "leaf" of the section. e.g., given key `appium.server.port`, `id` is `port`.
+     */
+    id: keyof AppiumSessionConfig;
+    /**
+     * The entire section name, if it is a default setting.
+     * Used to cross-reference defaults when creating a new file.
+     */
+    configKey?: ConfigPath;
+
+    /**
+     * User-settable nickname
+     */
+    nickname: string;
+
+    /**
+     * This is a VSCode-specific field.  The manifest contains mostly these `markdownDescription` fields. The webview does not render markdown, however.  We'll use this as the last resort for describing a setting
+     */
+    markdownDescription?: string;
+  }
 }
 
 declare module '@wdio/types/build/Capabilities' {

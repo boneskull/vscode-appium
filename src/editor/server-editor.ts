@@ -1,6 +1,8 @@
 import { html, safeHtml } from 'common-tags';
-import path from 'path';
-import { JsonObject, JsonValue } from 'type-fest';
+
+import { JSONSchema7 } from 'json-schema';
+import { NormalizedPackageJson } from 'read-pkg-up';
+import { JsonObject, JsonValue, PackageJson } from 'type-fest';
 import {
   CancellationToken,
   CustomTextEditorProvider,
@@ -9,13 +11,30 @@ import {
   Range,
   TextDocument,
   Uri,
+  Webview,
   WebviewPanel,
   window,
   workspace,
   WorkspaceEdit,
 } from 'vscode';
+import { showErrorMessage } from '../errors';
 import { ConfigService } from '../service/config';
 import { LoggerService } from '../service/logger';
+
+interface UpdateEvent<T extends keyof AppiumSessionConfig> extends Event {
+  type: 'update';
+  id: T;
+  value: AppiumSessionConfig[T];
+}
+
+/**
+ * TODO: pull these default values from the config
+ */
+const defaultAppiumSessionConfig: AppiumSessionConfig = {
+  host: '127.0.0.1',
+  port: 4723,
+  protocol: 'http',
+};
 
 const getNonce = () => {
   let text = '';
@@ -33,28 +52,14 @@ export class ServerEditorProvider
   private config: ConfigService = ConfigService.get();
   private disposables: Disposable[] = [];
   private log: LoggerService = LoggerService.get();
-  private settings?: Map<ConfigPath, JsonObject>;
-  private settingsFragments: Map<ConfigPath, string> = new Map();
+  private settings?: AppiumSettingsJsonMetadata[];
 
   public static readonly viewType = 'appium.serverEditor';
 
-  constructor(private context: ExtensionContext) {}
+  constructor(private ctx: ExtensionContext) {}
 
-  public static keyToSentenceCase(str: string) {
-    // adding space between strings
-    const parts = str.split('.');
-
-    const strToSentenceCase = (str: string) => {
-      const result = str.replace(/([A-Z])/g, ' $1');
-
-      // converting first character to uppercase and join it to the final string
-      return result.charAt(0).toUpperCase() + result.slice(1);
-    };
-    return parts.map(strToSentenceCase).join(' > ');
-  }
-
-  public static register(context: ExtensionContext): Disposable {
-    const provider = new ServerEditorProvider(context);
+  public static register(ctx: ExtensionContext): Disposable {
+    const provider = new ServerEditorProvider(ctx);
     const providerRegistration = window.registerCustomEditorProvider(
       ServerEditorProvider.viewType,
       provider
@@ -71,12 +76,17 @@ export class ServerEditorProvider
     webviewPanel: WebviewPanel,
     token: CancellationToken
   ): Promise<void> {
-    const updateWebview = () => {
-      webviewPanel.webview.postMessage({
+    const updateWebview = async () => {
+      const json = this.getDocumentAsJson(document);
+      await webviewPanel.webview.postMessage({
         type: 'update',
-        json: this.getDocumentAsJson(document),
+        json,
       });
     };
+
+    const isUpdateEvent = <T extends keyof AppiumSessionConfig>(
+      e: any
+    ): e is UpdateEvent<T> => e.type === 'update';
 
     // Setup initial content for the webview
     const { webview } = webviewPanel;
@@ -86,13 +96,14 @@ export class ServerEditorProvider
 
     webview.onDidReceiveMessage(
       (event) => {
-        switch (event.type) {
-          case 'update':
-            const { id, value } = event;
-            const json = this.getDocumentAsJson(document);
-            json[id] = value;
+        if (isUpdateEvent(event)) {
+          const { id, value } = event;
+          try {
+            const json = { ...this.getDocumentAsJson(document), [id]: value };
             this.updateTextDocument(document, json);
-            break;
+          } catch (err) {
+            showErrorMessage((<Error>err).message);
+          }
         }
       },
       null,
@@ -112,7 +123,10 @@ export class ServerEditorProvider
     );
     workspace.onDidChangeTextDocument(
       (event) => {
-        if (String(event.document.uri) === String(document.uri)) {
+        if (
+          event.document.uri.toString() === document.uri.toString() &&
+          event.contentChanges.length
+        ) {
           updateWebview();
         }
       },
@@ -121,58 +135,171 @@ export class ServerEditorProvider
     );
 
     // pre-fill the html with the current set of values
-    this.render(webviewPanel);
+    webviewPanel.webview.html = await this.getHtmlForWebview(
+      webviewPanel.webview,
+      this.getDocumentAsJson(document)
+    );
 
     // send the (same) values to the webview to persist the state
-    updateWebview();
+    // await updateWebview();
   }
 
-  private getDocumentAsJson(document: TextDocument): JsonObject {
+  private getDocumentAsJson(document: TextDocument): AppiumSessionConfig {
     const text = document.getText();
     if (text.trim().length === 0) {
-      return {};
+      return { ...defaultAppiumSessionConfig };
     }
 
     try {
       return JSON.parse(text);
-    } catch {
-      throw new Error(
-        'Could not get document as json. Content is not valid json'
-      );
+    } catch (e) {
+      showErrorMessage(`File ${document.fileName} is not valid JSON`);
+      throw e;
     }
   }
 
   /**
-   * THIS IS ALL HORRIBLE, I AM SORRY
-   * @param currentPanel
-   * @returns
+   * I SHOULD HAVE USED A JAVASCRIPT FRAMEWORK
+   * @param webview
    */
-  private getHtmlForWebviewPanel(currentPanel: WebviewPanel): string {
-    const fileUri = (fp: string) => {
-      const fragments = fp.split('/');
+  private async getHtmlForWebview(
+    webview: Webview,
+    json: AppiumSessionConfig
+  ): Promise<string> {
+    const assetUri = (...pathSegments: string[]) =>
+      webview.asWebviewUri(
+        Uri.joinPath(this.ctx.extensionUri, ...pathSegments)
+      );
 
-      return Uri.file(path.join(this.context.extensionPath, ...fragments));
+    const buildFormFragment = (
+      fragment: string,
+      setting: AppiumSettingsJsonMetadata
+    ) => {
+      return (
+        html`<vscode-form-group variant="settings-group"
+          >${fragment} <vscode-form-helper></vscode-form-helper
+        ></vscode-form-group>` +
+        safeHtml`${setting.description ?? setting.markdownDescription}` +
+        html`</vscode-form-helper
+          >
+        </vscode-form-group>`
+      );
     };
 
-    const assetUri = (fp: string) => {
-      return currentPanel.webview.asWebviewUri(fileUri(fp));
+    const toSentenceCase = (str: string) => {
+      // adding space between strings
+      const parts = str.split('.');
+
+      const strToSentenceCase = (str: string) => {
+        const result = str.replace(/([A-Z])/g, ' $1');
+
+        // converting first character to uppercase and join it to the final string
+        return result.charAt(0).toUpperCase() + result.slice(1);
+      };
+      return parts.map(strToSentenceCase).join(' > ');
     };
 
-    const { cspSource } = currentPanel.webview;
+    const settings = await this.getSettings();
+
+    const buildFormFragments = (): string => {
+      const formFragments: string[] = [];
+
+      settings.map((setting) => {
+        const { id, configKey } = setting;
+        const label = toSentenceCase(id);
+        const configValue = configKey && this.config.get(configKey);
+        const fileValue = json[id];
+        const value = fileValue ?? configValue ?? '';
+        switch (setting.type) {
+          case 'boolean':
+            formFragments.push(
+              buildFormFragment(
+                html`<vscode-form-label>${label}</vscode-form-label
+                ><vscode-checkbox
+                  id="${id}"
+                  name="${id}"
+                  value="true"
+                  ${configValue === true ? 'checked' : ''}
+                ></checkbox>`,
+                setting
+              )
+            );
+            break;
+          case 'string':
+            // NOTE: radio buttons are basically invisible
+            if (setting.enum) {
+              const select = html`<vscode-form-label
+                  >${label}</vscode-form-label
+                >
+                ><vscode-single-select id="${id}" name="${id}">
+                  ${(<string[]>setting.enum).map(
+                    (optionValue) =>
+                      html`<vscode-option
+                        value="${optionValue}"
+                        ${value === optionValue ? 'selected' : ''}
+                      >
+                        ${optionValue}
+                      </vscode-option>`
+                  )}
+                </vscode-single-select>`;
+              formFragments.push(buildFormFragment(select, setting));
+            } else {
+              formFragments.push(
+                buildFormFragment(
+                  html`<vscode-label>${label}</vscode-label
+                    ><vscode-inputbox
+                      id="${id}"
+                      type="text"
+                      value="${value}"
+                    ></vscode-inputbox>`,
+                  setting
+                )
+              );
+            }
+            break;
+          case 'number':
+            formFragments.push(
+              buildFormFragment(
+                html`<vscode-label>${label}</vscode-label
+                  ><vscode-inputbox
+                    id="${id}"
+                    type="number"
+                    value="${configValue ?? ''}"
+                  ></vscode-inputbox>`,
+                setting
+              )
+            );
+            break;
+        }
+      });
+      return formFragments.join('\n');
+    };
+    const { cspSource } = webview;
     const nonce = getNonce();
     const componentLib = assetUri(
-      'node_modules/@bendera/vscode-webview-elements/dist/bundled.js'
+      'node_modules',
+      '@bendera',
+      'vscode-webview-elements',
+      'dist',
+      'bundled.js'
     );
-    const cssLib = assetUri('node_modules/@vscode/codicons/dist/codicon.css');
+    const cssLib = assetUri(
+      'node_modules',
+      '@vscode',
+      'codicons',
+      'dist',
+      'codicon.css'
+    );
     const serverEditorWebviewLib = assetUri(
-      'src/editor/resources/server-editor-webview.js'
+      'src',
+      'editor',
+      'webview',
+      'server-editor-webview.js'
     );
 
-    this.log.debug(componentLib, cssLib);
+    const formFragment = buildFormFragments();
 
-    const formHtml = [...this.settingsFragments].map(([key, value]) => value);
-
-    return html`
+    const webviewHtml = html`
       <!DOCTYPE html>
       <html lang="en">
         <head>
@@ -203,129 +330,62 @@ export class ServerEditorProvider
         </head>
         <body>
           <vscode-form-container id="serverEditorForm">
-            ${formHtml}
-            <!-- <vscode-button primary id="saveButton">Save</vscode-button> -->
+            ${formFragment}
           </vscode-form-container>
           <script src="${componentLib}" nonce="${nonce}" type="module"></script>
           <script src="${serverEditorWebviewLib}" nonce="${nonce}"></script>
         </body>
       </html>
     `;
+    return webviewHtml;
   }
 
-  private async getSettings(): Promise<Map<ConfigPath, JsonObject>> {
+  private async getSettings(): Promise<AppiumSettingsJsonMetadata[]> {
     if (this.settings) {
       return this.settings;
     }
-    const pkg = require('../../package.json');
-
-    this.settings = new Map(
-      Object.keys(pkg.contributes.configuration.properties)
-        .filter((key) => key.startsWith('appium.sessionDefaults'))
-        .map((key) => [
-          key.replace(/^appium\./, '') as ConfigPath,
-          pkg.contributes.configuration.properties[key],
-        ])
+    const pkgJson = await workspace.fs.readFile(
+      Uri.joinPath(this.ctx.extensionUri, 'package.json')
     );
+    // not quite, but close enough
+    const pkg: NormalizedPackageJson = JSON.parse(pkgJson.toString());
 
-    this.settings.set('sessionDefaults.nickname', {
-      description: 'Nickname for server. Defaults to "<host>:<port>"',
-      type: 'string',
-    });
-    return this.settings;
-  }
+    const settings: AppiumSettingsJsonMetadata[] = [
+      {
+        description: 'Nickname for server. Defaults to "<host>:<port>"',
+        type: 'string',
+        id: 'nickname',
+      },
+      ...Object.keys(pkg.contributes.configuration.properties)
+        .filter((key) => key.startsWith('appium.sessionDefaults'))
+        .map((key) => {
+          const id = key.replace(/^appium\.sessionDefaults\./, '');
+          return {
+            ...pkg.contributes.configuration.properties[key],
+            id,
+            // yeah the markdownDescription is not ok to use, because the webview
+            // doesn't know anything about markdown.  this is a naive attempt to strip out the
+            // little markdown we have in there.  the "`#...#`" thing is a special vscode configuration link,
+            // since we're reusing the configuration properties.
+            description:
+              pkg.contributes.configuration.properties[key].description ??
+              pkg.contributes.configuration.properties[key].markdownDescription
+                .replace(/`#|#`/g, '"')
+                .replace('appium.sessionDefaults', ''),
+          };
+        }),
+    ];
 
-  private async render(webviewPanel: WebviewPanel): Promise<void> {
-    const setFormHtml = (
-      key: ConfigPath,
-      value: string,
-      setting: JsonObject
-    ) => {
-      value =
-        html`<vscode-form-group variant="settings-group"
-          >${value} <vscode-form-helper></vscode-form-helper
-        ></vscode-form-group>` +
-        safeHtml`${
-          setting.description ??
-          setting._description ??
-          setting.markdownDescription
-        }` +
-        html`</vscode-form-helper
-        >
-      </vscode-form-group>`;
-      this.settingsFragments.set(key, value);
-    };
-
-    const settings = await this.getSettings();
-    settings.forEach((setting, key) => {
-      const label = ServerEditorProvider.keyToSentenceCase(key);
-      const configValue = this.config.get(key);
-      switch (setting.type) {
-        case 'boolean':
-          setFormHtml(
-            key,
-            html`<vscode-form-label>${label}</vscode-form-label
-              ><vscode-checkbox
-                id="${key}"
-                name="${key}"
-                value="true"
-                ${configValue === true ? 'checked' : ''}
-              ></checkbox>`,
-            setting
-          );
-          break;
-        case 'string':
-          // NOTE: radio buttons are basically invisible
-          if (setting.enum) {
-            const select = html`<vscode-form-label>${label}</vscode-form-label>
-              ><vscode-single-select id="${key}" name="${key}">
-                ${(<string[]>setting.enum).map(
-                  (value) =>
-                    html`<vscode-option
-                      value="${value}"
-                      ${configValue === value ? 'selected' : ''}
-                    >
-                      ${value}
-                    </vscode-option>`
-                )}
-              </vscode-single-select>`;
-            setFormHtml(key, select, setting);
-          } else {
-            setFormHtml(
-              key,
-              html`<vscode-label>${label}</vscode-label
-                ><vscode-inputbox
-                  id="${key}"
-                  type="text"
-                  value="${configValue ? configValue : ''}"
-                  message="some message"
-                ></vscode-inputbox>`,
-              setting
-            );
-          }
-          break;
-        case 'number':
-          setFormHtml(
-            key,
-            html`<vscode-label>${label}</vscode-label
-              ><vscode-inputbox
-                id="${key}"
-                type="number"
-                value="${configValue ? configValue : ''}"
-                message="some message"
-              ></vscode-inputbox>`,
-            setting
-          );
-          break;
-      }
-    });
-    webviewPanel.webview.html = this.getHtmlForWebviewPanel(webviewPanel);
+    return (this.settings = settings);
   }
 
   /**
    * Write out the json to a given document.
    */
-  private updateTextDocument(document: TextDocument, json: JsonValue) {
+  private updateTextDocument(
+    document: TextDocument,
+    json: AppiumSessionConfig
+  ) {
     const edit = new WorkspaceEdit();
 
     // Just replace the entire document every time for this example extension.
