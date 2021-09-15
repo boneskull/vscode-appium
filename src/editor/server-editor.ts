@@ -1,8 +1,5 @@
 import { html, safeHtml } from 'common-tags';
-
-import { JSONSchema7 } from 'json-schema';
 import { NormalizedPackageJson } from 'read-pkg-up';
-import { JsonObject, JsonValue, PackageJson } from 'type-fest';
 import {
   CancellationToken,
   CustomTextEditorProvider,
@@ -21,9 +18,12 @@ import { showErrorMessage } from '../errors';
 import { ConfigService } from '../service/config';
 import { LoggerService } from '../service/logger';
 
+/**
+ * This is the event that the webview posts to the {@link ServerEditorProvider}
+ */
 interface UpdateEvent<T extends keyof AppiumSessionConfig> extends Event {
-  type: 'update';
   id: T;
+  type: 'update';
   value: AppiumSessionConfig[T];
 }
 
@@ -56,7 +56,7 @@ export class ServerEditorProvider
 
   public static readonly viewType = 'appium.serverEditor';
 
-  constructor(private ctx: ExtensionContext) {}
+  private constructor(private ctx: ExtensionContext) {}
 
   public static register(ctx: ExtensionContext): Disposable {
     const provider = new ServerEditorProvider(ctx);
@@ -76,6 +76,10 @@ export class ServerEditorProvider
     webviewPanel: WebviewPanel,
     token: CancellationToken
   ): Promise<void> {
+    if (token.isCancellationRequested) {
+      return;
+    }
+
     const updateWebview = async () => {
       const json = this.getDocumentAsJson(document);
       await webviewPanel.webview.postMessage({
@@ -95,12 +99,21 @@ export class ServerEditorProvider
     };
 
     webview.onDidReceiveMessage(
-      (event) => {
+      async (event) => {
         if (isUpdateEvent(event)) {
           const { id, value } = event;
           try {
-            const json = { ...this.getDocumentAsJson(document), [id]: value };
-            this.updateTextDocument(document, json);
+            const json = {
+              ...(this.getDocumentAsJson(document) ??
+                defaultAppiumSessionConfig),
+              [id]: value,
+            };
+            if (!(await this.updateTextDocument(document, json))) {
+              this.log.warn(
+                'Could not apply change to document %s',
+                document.fileName
+              );
+            }
           } catch (err) {
             showErrorMessage((<Error>err).message);
           }
@@ -139,12 +152,11 @@ export class ServerEditorProvider
       webviewPanel.webview,
       this.getDocumentAsJson(document)
     );
-
-    // send the (same) values to the webview to persist the state
-    // await updateWebview();
   }
 
-  private getDocumentAsJson(document: TextDocument): AppiumSessionConfig {
+  private getDocumentAsJson(
+    document: TextDocument
+  ): AppiumSessionConfig | undefined {
     const text = document.getText();
     if (text.trim().length === 0) {
       return { ...defaultAppiumSessionConfig };
@@ -154,7 +166,6 @@ export class ServerEditorProvider
       return JSON.parse(text);
     } catch (e) {
       showErrorMessage(`File ${document.fileName} is not valid JSON`);
-      throw e;
     }
   }
 
@@ -164,7 +175,7 @@ export class ServerEditorProvider
    */
   private async getHtmlForWebview(
     webview: Webview,
-    json: AppiumSessionConfig
+    json?: AppiumSessionConfig
   ): Promise<string> {
     const assetUri = (...pathSegments: string[]) =>
       webview.asWebviewUri(
@@ -208,7 +219,7 @@ export class ServerEditorProvider
         const { id, configKey } = setting;
         const label = toSentenceCase(id);
         const configValue = configKey && this.config.get(configKey);
-        const fileValue = json[id];
+        const fileValue = json?.[id];
         const value = fileValue ?? configValue ?? '';
         switch (setting.type) {
           case 'boolean':
@@ -382,10 +393,10 @@ export class ServerEditorProvider
   /**
    * Write out the json to a given document.
    */
-  private updateTextDocument(
+  private async updateTextDocument(
     document: TextDocument,
     json: AppiumSessionConfig
-  ) {
+  ): Promise<boolean> {
     const edit = new WorkspaceEdit();
 
     // Just replace the entire document every time for this example extension.
