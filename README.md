@@ -1,78 +1,55 @@
 # vscode-appium
 
-> A [VS Code] extension for working with [Appium] servers
+> A [VS Code][] extension for working with [Appium][] servers
 
 ## Features
 
 - Easily run local Appium servers
 - Monitor server status
 - Save and load server configurations
+- Good feels
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+## Project Goals
 
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+The point of this project is to provide an interface to Appium _for developers_. Developers live in their IDEs, and [VS Code][] is certainly a popular one. We want to make it _as easy as possible_ for a developer to leverage Appium's automation capabilities--especially for the mobile web. I hear we all could stand to do a bit more testing in Safari iOS...
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+[Appium] is bundled with this extension. However, its prerequisites are not. Please see Appium's [getting started guide](http://appium.io/docs/en/about-appium/getting-started/index.html) for more information.
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+This extension contributes two sets of settings, which are described in detail via the UI:
 
-For example:
-
-This extension contributes the following settings:
-
-- `myExtension.enable`: enable/disable this extension
-- `myExtension.thing`: set to `blah` to do something
+- `appium.serverDefaults.*`: Defaults to use when running a local Appium server.
+- `appium.sessionDefaults.*`: Defaults to use when creating saved sessions (`.appiumserver` files).
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+**This extension should be considered an early alpha.** It is not feature-complete, nor is it well-tested. It probably won't hose your filesystem, but we make no promises.
 
-## Release Notes
+## Roadmap
 
-Users appreciate release notes as you update your extension.
+There's a lot to do, and a lot we _could_ do. What's the most useful thing this extension _doesn't_ do? Let's [discuss](https://github.com/boneskull/vscode-appium/issues/new).
 
-### 1.0.0
+- Implement server configuration like [Appium Inspector][] (including cloud vendors, etc.)
+- Provide an example `.appiumserver` file
+- Where it makes sense, provide commands for various Appium API endpoints.
+- Greater focus on mobile web. What can we do here?
+- Selenium Grid integration?
+- Greater control over server monitoring behavior
+- More more more
 
-Initial release of ...
+### Anti-Roadmap
 
-### 1.0.1
+- [Appium Inspector][] provides a high level of interaction which we _don't_ need to implement.
+- This isn't the place to make installing [Appium][]'s prerequisites easier, either.
+- Other IDEs could use Appium plugins! Xcode and Android Studio (Jetbrains) might make a lot of sense! But not here.
 
-Fixed issue #.
+## License
 
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-- [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-- Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-- Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-- Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-- [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-- [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Authored by [Christopher Hiller](https://github.com/boneskull). Copyright 2021 [Sauce Labs](https://saucelabs.com). Licensed Apache-2.0
 
 [vs code]: https://code.visualstudio.com/
 [appium]: https://appium.io
+[appium inspector]: https://github.com/appium/appium-inspector
