@@ -1,7 +1,7 @@
 import { Err, Ok } from 'ts-results';
 import { JSONSchema7 } from 'json-schema';
 import { CamelCasedProperties } from 'type-fest';
-import { WorkspaceConfiguration } from 'vscode';
+import { Disposable, Uri, WorkspaceConfiguration } from 'vscode';
 import { ServerConfig } from './appium-config';
 
 declare global {
@@ -17,12 +17,12 @@ declare global {
     CamelCasedProperties<ServerConfig>;
 
   interface AppiumSessionConfig {
-    host: string;
+    host?: string;
     nickname?: string;
     password?: string;
     pathname?: string;
-    port: number;
-    protocol: 'http' | 'https';
+    port?: number;
+    protocol?: 'http' | 'https';
     remoteAppiumVersion?: '1.x' | '2.x';
     serverConfig?: AppiumLocalServerConfig;
     username?: string;
@@ -37,18 +37,16 @@ declare global {
   interface AppiumSession {
     id: string;
     capabilities: Record<string, any>;
-    serverNickname?: string;
+    parent: string;
   }
 
   interface AppiumServerInfo extends AppiumSessionConfig {
-    nickname: string;
-    host: string;
-    port: number;
     status: {
       build?: AppiumBuild;
       online?: boolean;
     };
     sessions?: AppiumSession[];
+    fsPath: string;
   }
 
   type AppiumResultContext<C = object> = { context: C };
@@ -155,7 +153,7 @@ declare global {
      * The entire section name, if it is a default setting.
      * Used to cross-reference defaults when creating a new file.
      */
-    configKey?: ConfigPath;
+    configPath?: ConfigPath;
 
     /**
      * User-settable nickname

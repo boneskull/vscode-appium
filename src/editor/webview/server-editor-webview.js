@@ -8,18 +8,15 @@
   // setup events to persist to backend when changed
   // we only have inputboxes and single-selects. if we had more, we need to add more,
   // and probably update the `updateContent` handler.
-  const formFields = [
-    ...inputboxes,
-    ...singleSelects,
-  ];
-
-  
+  const formFields = [...inputboxes, ...singleSelects];
 
   const setInitialState = () => {
     /** @type {any} */
     const initialJson = {};
     for (let field of formFields) {
-      const id = /** @type {keyof AppiumSettingsJsonMetadata} */ (field.getAttribute('id'));
+      const id = /** @type {keyof AppiumSettingsJsonMetadata} */ (
+        field.getAttribute('id')
+      );
       initialJson[id] = field.value;
     }
     vscode.setState({
@@ -44,9 +41,13 @@
         const id = /** @type {keyof AppiumSettingsJsonMetadata} */ (
           el.getAttribute('id')
         );
-        if (/** @type {VscodeSingleSelect} */(el).options) {
-          /** @type {VscodeSingleSelect} */(el).selectedIndex = /** @type {VscodeSingleSelect} */(el).options.findIndex(opt => opt.value === settings[id]);
+        if (/** @type {VscodeSingleSelect} */ (el).options) {
+          el = /** @type {VscodeSingleSelect} */ (el);
+          el.selectedIndex = el.options.findIndex(
+            (opt) => opt.value === settings[id]
+          );
         } else {
+          el = /** @type {VscodeInputbox} */ (el);
           el.value = String(settings[id]);
         }
       });
@@ -54,11 +55,19 @@
 
   const initListeners = () => {
     for (let input of formFields) {
-      const id = input.id;
+      const field = input.id;
       input.addEventListener('vsc-change', (event) => {
-        const value  = /** @type {VscChangeEvent} */ (event).detail.value;
-
-        vscode.postMessage({ type: 'update', id, value });
+        const evt = /** @type {VscChangeEvent} */ (event);
+        /** @type {string|number|undefined} */
+        let value =
+          typeof evt.detail === 'string' ? evt.detail : evt.detail?.value;
+        if (input.getAttribute('type') === 'number') {
+          value = parseInt(value, 10);
+          if (isNaN(value)) {
+            value = undefined;
+          }
+        }
+        vscode.postMessage({ type: 'update', field, value });
       });
     }
   };
@@ -87,13 +96,13 @@
   const state = vscode.getState();
   if (state) {
     updateContent(state.json);
-  } else {
+  }  else {
     setInitialState();
   }
 })();
 
 /**
- * @typedef {Event & {detail: {value: string}}} VscChangeEvent
+ * @typedef {Event & {detail: string | {value: string}}} VscChangeEvent
  */
 
 /**

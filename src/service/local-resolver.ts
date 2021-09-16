@@ -20,6 +20,8 @@ export interface ResolverServiceOptions {
   bundled: boolean;
 }
 
+let resolver: ResolverService;
+
 /**
  * A service for resolving the Appium executable.
  * If the workspace is untrusted, will return the singleton instance of
@@ -33,10 +35,16 @@ export class ResolverService {
   /**
    * Logger service.
    */
-  private log: LoggerService;
+  private readonly log = LoggerService.get();
 
-  constructor(log: LoggerService) {
-    this.log = log;
+  static get() {
+    if (resolver) {
+      return resolver;
+    }
+    return (resolver = new ResolverService());
+  }
+
+  private constructor() {
     this.forceBundled = !workspace.isTrusted;
   }
 

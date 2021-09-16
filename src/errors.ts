@@ -1,5 +1,5 @@
 import { window } from 'vscode';
-import { HTTPError, RequestError } from 'got';
+import { HTTPError, RequestError, TimeoutError } from 'got';
 
 /**
  * A typeguarded version of `instanceof Error` for NodeJS.
@@ -39,7 +39,11 @@ export class UnknownError extends AggregateError {
   }
 }
 
-export type RemoteError = ConnectionRefusedError | NotFoundError | UnknownError;
+export type RemoteError =
+  | ConnectionRefusedError
+  | NotFoundError
+  | UnknownError
+  | TimeoutError;
 
 export const { showErrorMessage, showWarningMessage, showInformationMessage } =
   window;

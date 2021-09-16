@@ -7,6 +7,7 @@ import {
   CustomExecution,
   Disposable,
   WorkspaceFolder,
+  tasks,
 } from 'vscode';
 import { AppiumPseudoterminal } from '../pty';
 import { ConfigService } from '../service/config';
@@ -31,11 +32,20 @@ export class AppiumTaskProvider implements TaskProvider, Disposable {
    */
   static readonly taskType = APPIUM_SERVER_TASK_TYPE;
 
-  constructor(
-    private log: LoggerService,
-    private resolver: ResolverService,
-    private config: ConfigService
-  ) {}
+  private constructor() {}
+
+  private readonly log = LoggerService.get();
+  private readonly config = ConfigService.get();
+  private readonly resolver = ResolverService.get();
+
+  public static register() {
+    return [
+      tasks.registerTaskProvider(
+        AppiumTaskProvider.taskType,
+        new AppiumTaskProvider()
+      ),
+    ];
+  }
 
   public dispose() {
     // TODO: should we save and dispose the pty?

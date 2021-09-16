@@ -32,3 +32,6 @@ export const APPIUM_1_BASEPATH = '/wd/hub';
 export const APPIUM_2_BASEPATH = '';
 
 export const SERVER_WRAPPER_PATH = require.resolve('./server-wrapper');
+export const DEFAULT_SERVER_FS_PATH = '__DEFAULT__';
+
+export const REQUEST_TIMEOUT = 5000;

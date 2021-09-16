@@ -38,8 +38,9 @@
   },
   "appium.sessionDefaults.host": {
     "markdownDescription": "Hostname of Appium server",
-    "type": "ipv4",
-    "default": "127.0.0.1"
+    "type": "string",
+    "default": "127.0.0.1",
+    "$comment": "Actually of type 'ipv4'"
   },
   "appium.sessionDefaults.port": {
     "markdownDescription": "Port of Appium server",

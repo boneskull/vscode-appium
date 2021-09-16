@@ -1,4 +1,5 @@
 import { TreeItem, ThemeIcon, TreeItemCollapsibleState } from 'vscode';
+import { DEFAULT_SERVER_FS_PATH } from '../constants';
 import { LoggerService } from '../service/logger';
 
 export interface AppiumTreeItem<T> extends TreeItem {
@@ -10,8 +11,9 @@ export class AppiumServerTreeItem implements AppiumTreeItem<AppiumServerInfo> {
 
   public readonly contextValue = AppiumServerTreeItem.contextValue;
   public readonly id: string;
+  private log = LoggerService.get();
 
-  constructor(private log: LoggerService, private info: AppiumServerInfo) {
+  constructor(private info: AppiumServerInfo) {
     this.info = info;
     this.id = `${info.host}:${info.port}`;
   }
@@ -25,7 +27,11 @@ export class AppiumServerTreeItem implements AppiumTreeItem<AppiumServerInfo> {
   }
 
   public get description() {
-    return this.info.status.online ? 'ONLINE' : 'OFFLINE';
+    return this.info.host && this.info.port
+      ? this.info.status.online
+        ? 'ONLINE'
+        : 'OFFLINE'
+      : 'UNKNOWN';
   }
 
   public get iconPath() {
@@ -39,10 +45,19 @@ export class AppiumServerTreeItem implements AppiumTreeItem<AppiumServerInfo> {
   }
 
   public get tooltip() {
+    let result;
     if (this.info.status.build?.version) {
-      return `**${this.label}** (v${this.info.status.build.version}) - _ONLINE_`;
+      result = `**${this.label}** (v${this.info.status.build.version}) - _ONLINE_`;
     }
-    return `**${this.label}** - _OFFLINE_`;
+    if (this.info.port && this.info.host) {
+      result = `**${this.label}** - _OFFLINE_`;
+    } else {
+      result = `**${this.label}** - _UNKNOWN; set \`host\` & \`port\`_`;
+    }
+    if (this.info.fsPath !== DEFAULT_SERVER_FS_PATH) {
+      result = `${result} (from \`${this.info.fsPath}\`)`;
+    }
+    return result;
   }
 
   public toString(): string {
@@ -57,8 +72,9 @@ export class AppiumSessionTreeItem
   static readonly contextValue = 'appiumSession';
 
   public readonly contextValue = AppiumSessionTreeItem.contextValue;
+  private log = LoggerService.get();
 
-  constructor(private log: LoggerService, session: AppiumSession) {
+  constructor(session: AppiumSession) {
     super(session.id);
     this.tooltip = `${this.label} [${session.capabilities.platformName}]`;
     this.description = `Appium Session ${session.id}`;

@@ -1,4 +1,4 @@
-import { window, ViewColumn, WebviewPanel } from 'vscode';
+import { window, ViewColumn, WebviewPanel, Uri } from 'vscode';
 import { ServerModel } from '../server-model';
 import { LoggerService } from '../service/logger';
 
@@ -11,11 +11,12 @@ import { LoggerService } from '../service/logger';
  * @returns A webview panel containing the screenshot
  */
 export async function screenshot(
-  log: LoggerService,
   serverInfo: AppiumSessionConfig | AppiumServerInfo,
-  sessionId: string
+  sessionId: string,
+  uri?: Uri
 ): Promise<WebviewPanel> {
-  const model = new ServerModel(log, serverInfo);
+  const log = LoggerService.get();
+  const model = new ServerModel(serverInfo, uri);
 
   const result = await model.getScreenshot(sessionId);
   const panel = window.createWebviewPanel(

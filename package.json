@@ -288,7 +288,7 @@
         },
         "appium.sessionDefaults.host": {
           "markdownDescription": "Hostname of Appium server",
-          "type": "ipv4",
+          "type": "string",
           "default": "127.0.0.1"
         },
         "appium.sessionDefaults.port": {
@@ -575,7 +575,7 @@
     "viewsWelcome": [
       {
         "view": "appium",
-        "contents": "No Appium Servers configured. [Add Server](command:appium.addServer)"
+        "contents": "Loading Appium servers, please wait..."
       }
     ]
   },

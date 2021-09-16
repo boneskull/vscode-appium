@@ -23,7 +23,7 @@ export class LocalServer implements Disposable {
     executable?: AppiumExecutable
   ) {
     if (!executable) {
-      this.resolver = this.resolver ?? new ResolverService(this.log);
+      this.resolver = ResolverService.get();
       executable = await this.resolver.resolve(config);
     }
     this.log.info(

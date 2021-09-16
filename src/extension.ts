@@ -1,25 +1,32 @@
-import { Disposable, ExtensionContext } from 'vscode';
-import { registerContextFreeCommands } from './commands';
+import { commands, Disposable, ExtensionContext } from 'vscode';
 import { ServerEditorProvider } from './editor/server-editor';
 import { ConfigService } from './service/config';
-import { ResolverService } from './service/local-resolver';
 import { LoggerService } from './service/logger';
-import { registerTasks } from './task';
-import { registerViews } from './view';
+import { AppiumTreeDataProvider } from './view/tree-data-provider';
+import { AppiumTaskProvider } from './task/task-provider';
+import { ServerConfigBusService } from './server-config-bus';
+import { showOutput } from './commands/show-output';
+import { startLocalServer } from './commands/start-local-server';
 
 const disposables: Disposable[] = [];
 let log: LoggerService;
 
 export function activate(ctx: ExtensionContext) {
   log = LoggerService.get(ctx);
-  const resolver = new ResolverService(log);
   const config = ConfigService.get();
+  const serverConfigBus = ServerConfigBusService.get();
 
   disposables.push(
-    ...registerTasks(log, resolver, config),
-    ...registerContextFreeCommands(log, resolver, config),
-    ...registerViews(log, config, ctx),
-    ServerEditorProvider.register(ctx),
+    ...AppiumTaskProvider.register(),
+    ...AppiumTreeDataProvider.register(),
+    ...ServerEditorProvider.register(ctx),
+    commands.registerCommand(startLocalServer.command, () => {
+      startLocalServer();
+    }),
+    commands.registerCommand(showOutput.command, () => {
+      showOutput();
+    }),
+    serverConfigBus,
     config,
     log
   );

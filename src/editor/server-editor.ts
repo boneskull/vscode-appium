@@ -22,7 +22,7 @@ import { LoggerService } from '../service/logger';
  * This is the event that the webview posts to the {@link ServerEditorProvider}
  */
 interface UpdateEvent<T extends keyof AppiumSessionConfig> extends Event {
-  id: T;
+  field: T;
   type: 'update';
   value: AppiumSessionConfig[T];
 }
@@ -58,13 +58,13 @@ export class ServerEditorProvider
 
   private constructor(private ctx: ExtensionContext) {}
 
-  public static register(ctx: ExtensionContext): Disposable {
+  public static register(ctx: ExtensionContext): Disposable[] {
     const provider = new ServerEditorProvider(ctx);
     const providerRegistration = window.registerCustomEditorProvider(
       ServerEditorProvider.viewType,
       provider
     );
-    return providerRegistration;
+    return [providerRegistration];
   }
 
   public dispose() {
@@ -80,7 +80,7 @@ export class ServerEditorProvider
       return;
     }
 
-    const updateWebview = async () => {
+    const updateWebview = async (document: TextDocument) => {
       const json = this.getDocumentAsJson(document);
       await webviewPanel.webview.postMessage({
         type: 'update',
@@ -101,13 +101,22 @@ export class ServerEditorProvider
     webview.onDidReceiveMessage(
       async (event) => {
         if (isUpdateEvent(event)) {
-          const { id, value } = event;
+          const { field, value } = event;
           try {
             const json = {
               ...(this.getDocumentAsJson(document) ??
                 defaultAppiumSessionConfig),
-              [id]: value,
+              [field]: value,
             };
+            if (value === undefined) {
+              delete json[field];
+            }
+            this.log.debug(
+              `Updating %s of %s: %O`,
+              field,
+              document.fileName,
+              json
+            );
             if (!(await this.updateTextDocument(document, json))) {
               this.log.warn(
                 'Could not apply change to document %s',
@@ -116,6 +125,7 @@ export class ServerEditorProvider
             }
           } catch (err) {
             showErrorMessage((<Error>err).message);
+            this.log.error(<Error>err);
           }
         }
       },
@@ -128,7 +138,7 @@ export class ServerEditorProvider
     webviewPanel.onDidChangeViewState(
       () => {
         if (webviewPanel.visible) {
-          updateWebview();
+          updateWebview(document);
         }
       },
       null,
@@ -140,7 +150,7 @@ export class ServerEditorProvider
           event.document.uri.toString() === document.uri.toString() &&
           event.contentChanges.length
         ) {
-          updateWebview();
+          updateWebview(event.document);
         }
       },
       null,
@@ -210,17 +220,18 @@ export class ServerEditorProvider
       return parts.map(strToSentenceCase).join(' > ');
     };
 
-    const settings = await this.getSettings();
+    const settings = await this.getSettingsFromConfig();
 
     const buildFormFragments = (): string => {
       const formFragments: string[] = [];
 
       settings.map((setting) => {
-        const { id, configKey } = setting;
+        const { id, configPath } = setting;
         const label = toSentenceCase(id);
-        const configValue = configKey && this.config.get(configKey);
+        const configValue = configPath && this.config.get(configPath);
         const fileValue = json?.[id];
-        const value = fileValue ?? configValue ?? '';
+        const value = fileValue ?? '';
+        const placeholder = configValue;
         switch (setting.type) {
           case 'boolean':
             formFragments.push(
@@ -261,6 +272,7 @@ export class ServerEditorProvider
                     ><vscode-inputbox
                       id="${id}"
                       type="text"
+                      placeholder="${placeholder}"
                       value="${value}"
                     ></vscode-inputbox>`,
                   setting
@@ -275,7 +287,8 @@ export class ServerEditorProvider
                   ><vscode-inputbox
                     id="${id}"
                     type="number"
-                    value="${configValue ?? ''}"
+                    placeholder="${placeholder}"
+                    value="${value}"
                   ></vscode-inputbox>`,
                 setting
               )
@@ -351,7 +364,7 @@ export class ServerEditorProvider
     return webviewHtml;
   }
 
-  private async getSettings(): Promise<AppiumSettingsJsonMetadata[]> {
+  private async getSettingsFromConfig(): Promise<AppiumSettingsJsonMetadata[]> {
     if (this.settings) {
       return this.settings;
     }
@@ -382,7 +395,8 @@ export class ServerEditorProvider
               pkg.contributes.configuration.properties[key].description ??
               pkg.contributes.configuration.properties[key].markdownDescription
                 .replace(/`#|#`/g, '"')
-                .replace('appium.sessionDefaults', ''),
+                .replace('appium.sessionDefaults.', ''),
+            configPath: key.replace(/^appium\./, ''),
           };
         }),
     ];

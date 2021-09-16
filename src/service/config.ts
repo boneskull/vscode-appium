@@ -1,12 +1,11 @@
 import {
   ConfigurationChangeEvent,
   Disposable,
-  workspace,
-  window,
   Uri,
+  window,
+  workspace,
 } from 'vscode';
 import { LoggerService } from './logger';
-import readPkgUp from 'read-pkg-up';
 
 type ConfigListener<S extends ConfigPath> = (
   value: ConfigPathValue<S>,
@@ -24,7 +23,6 @@ export class ConfigService implements Disposable {
   >();
 
   static readonly namespace = 'appium';
-  private sectionNames: ConfigPath[] = [];
 
   private constructor() {
     this.changeListener = workspace.onDidChangeConfiguration(
@@ -34,20 +32,7 @@ export class ConfigService implements Disposable {
     );
   }
 
-  static get(): ConfigService {
-    if (configService) {
-      return configService;
-    }
-    return (configService = new ConfigService());
-  }
-
   public static get currentWSConfig(): AppiumWorkspaceConfiguration {
-    // LoggerService.get().debug(
-    //   workspace.getConfiguration(
-    //     ConfigService.namespace,
-    //     ConfigService.getCurrentWorkspaceFolderUri()
-    //   )
-    // );
     return workspace.getConfiguration(
       ConfigService.namespace,
       ConfigService.getCurrentWorkspaceFolderUri()
@@ -75,6 +60,13 @@ export class ConfigService implements Disposable {
       }
       return acc;
     }, {} as Partial<T>);
+  }
+
+  public static get(): ConfigService {
+    if (configService) {
+      return configService;
+    }
+    return (configService = new ConfigService());
   }
 
   public static getCurrentWorkspaceFolderUri(): Uri | undefined {

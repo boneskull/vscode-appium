@@ -1,17 +1,17 @@
-import got, { OptionsOfJSONResponseBody } from 'got';
-import { Err, Ok, Result } from 'ts-results';
+import got, { OptionsOfJSONResponseBody, TimeoutError } from 'got';
+import { Result } from 'ts-results';
 import { JsonObject } from 'type-fest';
 import { URL } from 'url';
+import { REQUEST_TIMEOUT as REQUEST_TIMEOUT } from '../constants';
 import {
   ConnectionRefusedError,
   isHTTPError,
   isRequestError,
   NotFoundError,
+  RemoteError,
   UnknownError,
 } from '../errors';
 import { LoggerService } from './logger';
-
-type RequestError = ConnectionRefusedError | NotFoundError | UnknownError;
 
 interface AppiumResponse<T> extends JsonObject {
   sessionId: null | string;
@@ -21,7 +21,7 @@ interface AppiumResponse<T> extends JsonObject {
 
 type AppiumRequestResult<T> = AppiumResult<
   AppiumResponse<T>,
-  RequestError,
+  RemoteError,
   { url: URL }
 >;
 
@@ -63,8 +63,8 @@ export class RequestService {
       opts = {};
     }
     const handleError = RequestService.createErrorHandler(url);
-    const result = await Result.wrapAsync<AppiumResponse<T>, RequestError>(() =>
-      got(url, opts).json()
+    const result = await Result.wrapAsync<AppiumResponse<T>, RemoteError>(() =>
+      got(url, { timeout: REQUEST_TIMEOUT, ...opts }).json()
     );
 
     return <AppiumRequestResult<T>>(
@@ -73,7 +73,7 @@ export class RequestService {
   }
 
   private static createErrorHandler(url: URL) {
-    return (err: unknown): RequestError => {
+    return (err: unknown): RemoteError => {
       if (isRequestError(err)) {
         if (err.code === 'ECONNREFUSED') {
           return new ConnectionRefusedError(err, `Failed to connect to ${url}`);
@@ -82,6 +82,8 @@ export class RequestService {
         if (err.code === '404') {
           return new NotFoundError(err, `${url} not found!`);
         }
+      } else if (err instanceof TimeoutError) {
+        return err;
       }
       return new UnknownError(err, `Unknown error: ${String(err)}`);
     };
