@@ -41,6 +41,7 @@
     "lint": "eslint \"src/**/*.ts\" \"scripts/*.mjs\" \"assets/*.js\"",
     "pretest": "npm run compile && npm run lint",
     "test": "node ./dist/test/runTest.js",
+    "test-package": "vsce package",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "watch": "npm run esbuild-base -- --sourcemap --watch"
   },
@@ -619,7 +620,7 @@
   "dependencies": {
     "@bendera/vscode-webview-elements": "^0.6.3",
     "@vscode/codicons": "^0.0.22",
-    "appium": "next"
+    "appium": "^2.0.0-beta.18"
   },
   "devDependencies": {
     "@types/common-tags": "^1.8.1",
