@@ -315,9 +315,7 @@ export class ServerEditorProvider
       'codicon.css'
     );
     const serverEditorWebviewLib = assetUri(
-      'src',
-      'editor',
-      'webview',
+      'assets',
       'server-editor-webview.js'
     );
 
@@ -332,7 +330,7 @@ export class ServerEditorProvider
             name="viewport"
             content="width=device-width, initial-scale=1.0"
           />
-          <title>Document</title>
+          <title>Appium Server Editor</title>
           <meta
             http-equiv="Content-Security-Policy"
             content="
