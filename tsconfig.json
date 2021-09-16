@@ -12,7 +12,5 @@
     "resolveJsonModule": true,
     "checkJs": true
   },
-  // "files": "src/**/*.ts",
-  // "include": "test/**/*.ts",
   "exclude": ["node_modules", ".vscode-test", "dist"]
 }
