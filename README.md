@@ -1,6 +1,6 @@
-# vscode-appium
+# Appium Toolbox for VSCode
 
-> A [VS Code][] extension for working with [Appium][] servers
+> A set of tools for [Appium][] servers
 
 ## Features
 
