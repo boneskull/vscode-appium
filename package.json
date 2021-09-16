@@ -35,16 +35,16 @@
   "scripts": {
     "compile": "npm run esbuild",
     "esbuild": "npm run esbuild-base -- --sourcemap",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/main.js --external:vscode --external:appium \"--external:*server-wrapper\" --format=cjs --platform=node --metafile=esbuild.json",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/main.js --external:vscode --external:appium --external:ts-results \"--external:*server-wrapper\" --format=cjs --platform=node --metafile=esbuild.json",
     "postesbuild-base": "esbuild ./src/server-wrapper.ts --outfile=dist/server-wrapper.js --format=cjs --platform=node --minify",
     "gen-schema-declarations": "node ./scripts/gen-schema-declarations.mjs",
     "lint": "eslint \"src/**/*.ts\" \"scripts/*.mjs\" \"assets/*.js\"",
+    "standard-version": "standard-version -a --header=\"# CHANGELOG: Appium Toolbox for VS Code\"",
     "pretest": "npm run compile && npm run lint",
     "test": "node ./dist/test/runTest.js",
     "test-package": "vsce package",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
-    "watch": "npm run esbuild-base -- --sourcemap --watch",
-    "standard-version": "standard-version -a --header=\"# CHANGELOG: Appium Toolbox for VS Code\""
+    "watch": "npm run esbuild-base -- --sourcemap --watch"
   },
   "contributes": {
     "commands": [
@@ -621,7 +621,8 @@
   "dependencies": {
     "@bendera/vscode-webview-elements": "^0.6.3",
     "@vscode/codicons": "^0.0.22",
-    "appium": "^2.0.0-beta.18"
+    "appium": "^2.0.0-beta.18",
+    "ts-results": "^3.3.0"
   },
   "devDependencies": {
     "@types/common-tags": "^1.8.1",
@@ -662,7 +663,6 @@
     "semver": "^7.3.5",
     "standard-version": "^9.3.1",
     "ts-node": "^10.2.1",
-    "ts-results": "^3.3.0",
     "type-fest": "^2.1.0",
     "typescript": "^4.3.2",
     "unexpected": "^12.0.3",
