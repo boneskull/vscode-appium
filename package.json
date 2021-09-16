@@ -36,7 +36,7 @@
     "compile": "npm run esbuild",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/main.js --external:vscode --external:appium \"--external:*server-wrapper\" --format=cjs --platform=node --metafile=esbuild.json",
-    "postesbuild-base": "tsc --outDir ./dist ./src/server-wrapper.ts",
+    "postesbuild-base": "esbuild ./src/server-wrapper.ts --outfile=dist/server-wrapper.js --format=cjs --platform=node --minify",
     "gen-schema-declarations": "node ./scripts/gen-schema-declarations.mjs",
     "lint": "eslint \"src/**/*.ts\" \"scripts/*.mjs\" \"assets/*.js\"",
     "pretest": "npm run compile && npm run lint",

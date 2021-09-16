@@ -6,7 +6,7 @@
     "sourceMap": true,
     "rootDir": "src",
     "esModuleInterop": true,
-    "strict": true /* enable all strict type-checking options */,
+    "strict": true,
     "noImplicitAny": true,
     "types": ["node", "webdriverio/async", "mocha"],
     "resolveJsonModule": true,
