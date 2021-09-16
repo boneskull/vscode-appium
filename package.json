@@ -674,7 +674,7 @@
     "write-pkg": "^4.0.0"
   },
   "engines": {
-    "vscode": "^1.57.0"
+    "vscode": "^1.59.0"
   },
   "icon": "./assets/appium-logo.png",
   "galleryBanner": {
