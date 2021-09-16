@@ -1,6 +1,11 @@
-# Changelog
+# CHANGELOG: Appium Toolbox for VS Code
+### [0.0.2](https://github.com/boneskull/vscode-appium/compare/v0.0.1...v0.0.2) (2021-09-16)
 
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### Bug Fixes
+
+* **build:** ts-results did not play well with esbuild, so moved it to external. ([49b077b](https://github.com/boneskull/vscode-appium/commit/49b077b2d301c814157b9895e2012f13fc5aab3e))
+* **vscode:** fix task definition for running extension in dev mode ([bf6eca5](https://github.com/boneskull/vscode-appium/commit/bf6eca5d5467577ec213fbc90f435eefd068d4c6))
 
 ### 0.0.1 (2021-09-16)
 
