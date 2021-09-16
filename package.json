@@ -35,7 +35,6 @@
   "scripts": {
     "compile": "npm run esbuild",
     "esbuild": "npm run esbuild-base -- --sourcemap",
-    "preesbuild-base": "npm run gen-schema-declarations",
     "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/main.js --external:vscode --external:appium \"--external:*server-wrapper\" --format=cjs --platform=node --metafile=esbuild.json",
     "postesbuild-base": "tsc --outDir ./dist ./src/server-wrapper.ts",
     "gen-schema-declarations": "node ./scripts/gen-schema-declarations.mjs",
@@ -43,7 +42,6 @@
     "pretest": "npm run compile && npm run lint",
     "test": "node ./dist/test/runTest.js",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
-    "prewatch": "npm run gen-schema-declarations",
     "watch": "npm run esbuild-base -- --sourcemap --watch"
   },
   "contributes": {
