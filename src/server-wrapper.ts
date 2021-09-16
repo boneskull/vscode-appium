@@ -1,3 +1,5 @@
+/// <reference types="./types/global"/>
+
 /**
  * A process started over IPC, which ensures these two functions are non-null
  * @todo The type of `message` should be {@link AppiumIPCMessage}.
