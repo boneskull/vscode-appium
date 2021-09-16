@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import { dim } from 'colorette';
 import { format } from 'util';
 import { Disposable, EventEmitter, Pseudoterminal, Event } from 'vscode';
 import { AppiumProcess } from './process';
@@ -47,7 +47,7 @@ export class AppiumPseudoterminal implements Pseudoterminal, Disposable {
   public open(): void {
     this.writeEmitter.log(
       format(
-        chalk.dim('Starting Appium v%s at %s with options: %O'),
+        dim('Starting Appium v%s at %s with options: %O'),
         this.executable.version,
         this.executable.path,
         this.config

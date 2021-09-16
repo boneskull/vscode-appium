@@ -593,7 +593,7 @@
     "@bendera/vscode-webview-elements": "^0.6.3",
     "@vscode/codicons": "^0.0.22",
     "appium": "file:../appium/packages/appium",
-    "chalk": "^4.1.1",
+    "colorette": "^1.4.0",
     "common-tags": "^1.8.0",
     "execa": "^5.1.1",
     "fast-equals": "^2.0.3",
