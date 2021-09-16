@@ -38,6 +38,7 @@ There's a lot to do, and a lot we _could_ do. What's the most useful thing this 
 - Greater focus on mobile web. What can we do here?
 - Selenium Grid integration?
 - Greater control over server monitoring behavior
+- Interaction with the `appium` v2 CLI -- driver and plugin management
 - More more more
 
 ### Anti-Roadmap
