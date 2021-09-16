@@ -43,7 +43,8 @@
     "test": "node ./dist/test/runTest.js",
     "test-package": "vsce package",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
-    "watch": "npm run esbuild-base -- --sourcemap --watch"
+    "watch": "npm run esbuild-base -- --sourcemap --watch",
+    "standard-version": "standard-version -a --header=\"# CHANGELOG: Appium Toolbox for VS Code\""
   },
   "contributes": {
     "commands": [
