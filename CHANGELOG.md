@@ -1,4 +1,11 @@
 # CHANGELOG: Appium Toolbox for VS Code
+### [0.0.6](https://github.com/boneskull/vscode-appium/compare/v0.0.5...v0.0.6) (2021-09-17)
+
+
+### Bug Fixes
+
+* **session:** sessions now have parents like they should ([719330d](https://github.com/boneskull/vscode-appium/commit/719330d53accc05a44b4a1a005825868309ded41))
+
 ### [0.0.5](https://github.com/boneskull/vscode-appium/compare/v0.0.4...v0.0.5) (2021-09-17)
 
 
