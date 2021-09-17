@@ -41,6 +41,7 @@ export async function main() {
             args.address,
             args.port
           );
+          args.appiumHome = args.appiumHome || process.env.APPIUM_HOME;
           await appium(args);
           proc.send({
             type: 'started',

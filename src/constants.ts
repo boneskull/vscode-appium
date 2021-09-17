@@ -1,11 +1,13 @@
 import appiumPkg from 'appium/package.json';
-import { APPIUM_HOME } from 'appium';
+import path from 'path';
+import os from 'os';
 import { ExtensionMode } from 'vscode';
 
 export const BUNDLED_APPIUM_EXECUTABLE_PATH = require.resolve('appium');
 export const OUTPUT_CHANNEL_NAME = 'Appium';
 export const BUNDLED_APPIUM_VERSION = appiumPkg.version;
-export const DEFAULT_APPIUM_HOME = process.env.APPIUM_HOME ?? APPIUM_HOME;
+export const DEFAULT_APPIUM_HOME =
+  process.env.APPIUM_HOME ?? path.join(os.homedir(), '.appium');
 export const APPIUM_SERVER_TASK_TYPE = 'appium-server';
 
 /**

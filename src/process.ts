@@ -31,7 +31,7 @@ export class AppiumProcess implements Disposable {
     try {
       const appium = (this.proc = this.exec(
         this.executable.path,
-        this.config.appiumHome
+        this.config.appiumHome || DEFAULT_APPIUM_HOME
       ));
       appium
         .on('message', (message: AppiumIPCMessage) => {
