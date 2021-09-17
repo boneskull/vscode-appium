@@ -1,7 +1,7 @@
 {
   "name": "vscode-appium",
   "displayName": "Appium Toolbox for VSCode",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A set of tools for Appium servers",
   "categories": [
     "Other"

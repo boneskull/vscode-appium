@@ -1,4 +1,11 @@
 # CHANGELOG: Appium Toolbox for VS Code
+### [0.0.3](https://github.com/boneskull/vscode-appium/compare/v0.0.2...v0.0.3) (2021-09-17)
+
+
+### Bug Fixes
+
+* **build:** correct bundling issues ([d6641fd](https://github.com/boneskull/vscode-appium/commit/d6641fde56adb86571bcb3dca0efa765db4cd058))
+
 ### [0.0.2](https://github.com/boneskull/vscode-appium/compare/v0.0.1...v0.0.2) (2021-09-16)
 
 
