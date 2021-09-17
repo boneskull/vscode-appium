@@ -1,4 +1,11 @@
 # CHANGELOG: Appium Toolbox for VS Code
+### [0.0.5](https://github.com/boneskull/vscode-appium/compare/v0.0.4...v0.0.5) (2021-09-17)
+
+
+### Bug Fixes
+
+* **editor:** create new .appiumserver files with usable defaults ([4e26eb3](https://github.com/boneskull/vscode-appium/commit/4e26eb36bb0ecc52c0d6b3016e2feb6a55dde3ca))
+
 ### [0.0.4](https://github.com/boneskull/vscode-appium/compare/v0.0.3...v0.0.4) (2021-09-17)
 
 
