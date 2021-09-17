@@ -12,7 +12,6 @@ import {
   WorkspaceEdit,
 } from 'vscode';
 import { screenshot } from '../commands/screenshot';
-import { DEFAULT_SERVER_FS_PATH } from '../constants';
 import { ServerConfigBusService } from '../server-config-bus';
 import { ServerModel } from '../server-model';
 import { ConfigService } from '../service/config';
@@ -68,6 +67,7 @@ export class AppiumTreeDataProvider
   static register(): Disposable[] {
     const disposables = [];
     const log = LoggerService.get();
+    const config = ConfigService.get();
     const treeDataProvider = new AppiumTreeDataProvider();
 
     disposables.push(
@@ -102,6 +102,7 @@ export class AppiumTreeDataProvider
       commands.registerCommand('appium.addServer', async () => {
         // try to put new file in .vscode
         log.debug('Command: appium.addServer');
+
         const rootUri = getCurrentWorkspaceFolderUri();
         if (rootUri) {
           try {
@@ -112,9 +113,22 @@ export class AppiumTreeDataProvider
             let newFileUri = Uri.file(filepath).with({ scheme: 'untitled' });
             await workspace.openTextDocument(newFileUri);
             const edit = new WorkspaceEdit();
+            const host = config.get('sessionDefaults.host') ?? '127.0.0.1';
+            const port = config.get('sessionDefaults.port') ?? 4723;
+            const protocol = config.get('sessionDefaults.protocol') ?? 'http';
 
+            const newFileContents = Object.freeze({
+              nickname: `${host}:${port}`,
+              host,
+              port,
+              protocol,
+            });
             if (!edit.has(newFileUri)) {
-              edit.insert(newFileUri, new Position(0, 0), '{}');
+              edit.insert(
+                newFileUri,
+                new Position(0, 0),
+                JSON.stringify(newFileContents, null, 2)
+              );
               await workspace.applyEdit(edit);
             }
 
@@ -123,6 +137,8 @@ export class AppiumTreeDataProvider
           } catch (err) {
             log.error(<Error>err);
           }
+        } else {
+          log.warn('No workspace; cannot create new file');
         }
       })
     );
@@ -213,10 +229,10 @@ export class AppiumTreeDataProvider
   private async monitorServer(server: ServerModel): Promise<void> {
     if (server.valid) {
       const watcher = this.remoteServerService.watch(server);
-      this.log.debug('Monitoring server at "%s"', server.fsPath);
+      this.log.info('Monitoring server at "%s"', server.fsPath);
       this.remoteServerWatchers.set(server.fsPath, watcher);
     } else {
-      this.log.debug(
+      this.log.warn(
         'Not monitoring server at "%s"; incomplete definition',
         server.fsPath
       );
@@ -276,13 +292,13 @@ export class AppiumTreeDataProvider
       // do nothing
     } else {
       this.log.debug('Appium tree root-level refresh');
-      this.changeEmitter.fire(element);
+      this.changeEmitter.fire();
     }
   }
 
   private async findServers(): Promise<void> {
     const serverFiles = await workspace.findFiles('.vscode/*.appiumserver');
-    this.log.debug('Found %d appium server file(s)', serverFiles.length);
+    this.log.info('Found %d appium server file(s)', serverFiles.length);
 
     if (serverFiles.length) {
       await Promise.all(

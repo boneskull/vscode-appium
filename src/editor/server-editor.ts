@@ -374,7 +374,7 @@ export class ServerEditorProvider
 
     const settings: AppiumSettingsJsonMetadata[] = [
       {
-        description: 'Nickname for server. Defaults to "<host>:<port>"',
+        description: 'Nickname for server for display in tree.',
         type: 'string',
         id: 'nickname',
       },

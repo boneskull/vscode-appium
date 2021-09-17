@@ -35,9 +35,7 @@ export class AppiumServerTreeItem implements AppiumTreeItem<AppiumServerInfo> {
   }
 
   public get iconPath() {
-    return new ThemeIcon(
-      this.info.status.build?.version ? 'vm-running' : 'vm-outline'
-    );
+    return new ThemeIcon(this.info.status.online ? 'vm-running' : 'vm-outline');
   }
 
   public get label() {

@@ -2,10 +2,10 @@ import { window, workspace } from 'vscode';
 
 export function getCurrentWorkspaceFolderUri() {
   const textEditor = window.activeTextEditor;
-  if (!textEditor) {
-    return workspace.workspaceFolders?.[0]?.uri;
+  let workspaceFolder;
+  if (textEditor) {
+    const { document } = textEditor;
+    workspaceFolder = workspace.getWorkspaceFolder(document.uri);
   }
-  const { document } = textEditor;
-  const workspaceFolder = workspace.getWorkspaceFolder(document.uri);
-  return workspaceFolder?.uri;
+  return workspaceFolder?.uri ?? workspace.workspaceFolders?.[0]?.uri;
 }
