@@ -37,7 +37,7 @@ declare global {
   interface AppiumSession {
     id: string;
     capabilities: Record<string, any>;
-    parent: string;
+    parent?: string;
   }
 
   interface AppiumServerInfo extends AppiumSessionConfig {

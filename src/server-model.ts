@@ -119,7 +119,7 @@ export class ServerModel implements AppiumServerInfo {
           .map(({ value: sessions }) => {
             this.log.info('Found %d active sessions', sessions.length);
             this.sessions = sessions.map((session) => ({
-              serverNickname: this.nickname,
+              parent: this.fsPath,
               ...session,
             }));
             this._online = true;
