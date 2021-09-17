@@ -10,7 +10,8 @@
     "noImplicitAny": true,
     "types": ["node", "webdriverio/async", "mocha"],
     "resolveJsonModule": true,
-    "checkJs": true
+    "checkJs": true,
+    "importHelpers": true
   },
-  "exclude": ["node_modules", ".vscode-test", "dist"]
+  "exclude": ["node_modules", ".vscode-test", "dist", "assets"]
 }

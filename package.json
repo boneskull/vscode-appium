@@ -50,6 +50,7 @@
     "commands": [
       {
         "command": "appium.showOutput",
+        "icon": "$(terminal)",
         "title": "Appium: Show Extension Output"
       },
       {
@@ -622,7 +623,8 @@
     "@bendera/vscode-webview-elements": "^0.6.3",
     "@vscode/codicons": "^0.0.22",
     "appium": "^2.0.0-beta.18",
-    "ts-results": "^3.3.0"
+    "ts-results": "^3.3.0",
+    "tslib": "^2.3.1"
   },
   "devDependencies": {
     "@types/common-tags": "^1.8.1",
