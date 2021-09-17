@@ -1,4 +1,11 @@
 # CHANGELOG: Appium Toolbox for VS Code
+### [0.0.4](https://github.com/boneskull/vscode-appium/compare/v0.0.3...v0.0.4) (2021-09-17)
+
+
+### Bug Fixes
+
+* **appium:** provide APPIUM_HOME properly ([f56236d](https://github.com/boneskull/vscode-appium/commit/f56236d3aff66fd07440c2c72d991060f6c40e8f))
+
 ### [0.0.3](https://github.com/boneskull/vscode-appium/compare/v0.0.2...v0.0.3) (2021-09-17)
 
 
